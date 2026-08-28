@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "vendor": "Fortinet",
+    "generated": "2026-08-29",
+    "metric": "Fortinet-assigned CNA CVEs published in each calendar month",
+    "metric_label": "Fortinet CNA CVEs",
+    "source": "CVEProject/cvelistV5",
+    "source_url": "https://github.com/CVEProject/cvelistV5",
+    "coverage": "2021-09 through 2026-08",
+    "methodology_note": "Calendar-month disclosure volume includes both regular monthly PSIRT disclosures and out-of-cycle Fortinet CNA publications. It is not presented as a direct equivalent of Microsoft Patch Tuesday release counts."
+  },
+  "monthly": [
+    {"month":"2021-09","fortinet_cna_cves":7},{"month":"2021-10","fortinet_cna_cves":6},{"month":"2021-11","fortinet_cna_cves":20},{"month":"2021-12","fortinet_cna_cves":39},
+    {"month":"2022-01","fortinet_cna_cves":2},{"month":"2022-02","fortinet_cna_cves":8},{"month":"2022-03","fortinet_cna_cves":11},{"month":"2022-04","fortinet_cna_cves":16},{"month":"2022-05","fortinet_cna_cves":9},{"month":"2022-06","fortinet_cna_cves":0},{"month":"2022-07","fortinet_cna_cves":15},{"month":"2022-08","fortinet_cna_cves":3},{"month":"2022-09","fortinet_cna_cves":10},{"month":"2022-10","fortinet_cna_cves":9},{"month":"2022-11","fortinet_cna_cves":17},{"month":"2022-12","fortinet_cna_cves":6},
+    {"month":"2023-01","fortinet_cna_cves":6},{"month":"2023-02","fortinet_cna_cves":38},{"month":"2023-03","fortinet_cna_cves":16},{"month":"2023-04","fortinet_cna_cves":20},{"month":"2023-05","fortinet_cna_cves":9},{"month":"2023-06","fortinet_cna_cves":21},{"month":"2023-07","fortinet_cna_cves":7},{"month":"2023-08","fortinet_cna_cves":1},{"month":"2023-09","fortinet_cna_cves":14},{"month":"2023-10","fortinet_cna_cves":36},{"month":"2023-11","fortinet_cna_cves":17},{"month":"2023-12","fortinet_cna_cves":13},
+    {"month":"2024-01","fortinet_cna_cves":5},{"month":"2024-02","fortinet_cna_cves":12},{"month":"2024-03","fortinet_cna_cves":9},{"month":"2024-04","fortinet_cna_cves":12},{"month":"2024-05","fortinet_cna_cves":11},{"month":"2024-06","fortinet_cna_cves":16},{"month":"2024-07","fortinet_cna_cves":11},{"month":"2024-08","fortinet_cna_cves":5},{"month":"2024-09","fortinet_cna_cves":10},{"month":"2024-10","fortinet_cna_cves":3},{"month":"2024-11","fortinet_cna_cves":17},{"month":"2024-12","fortinet_cna_cves":10},
+    {"month":"2025-01","fortinet_cna_cves":52},{"month":"2025-02","fortinet_cna_cves":15},{"month":"2025-03","fortinet_cna_cves":44},{"month":"2025-04","fortinet_cna_cves":12},{"month":"2025-05","fortinet_cna_cves":10},{"month":"2025-06","fortinet_cna_cves":13},{"month":"2025-07","fortinet_cna_cves":7},{"month":"2025-08","fortinet_cna_cves":14},{"month":"2025-09","fortinet_cna_cves":2},{"month":"2025-10","fortinet_cna_cves":32},{"month":"2025-11","fortinet_cna_cves":18},{"month":"2025-12","fortinet_cna_cves":18},
+    {"month":"2026-01","fortinet_cna_cves":7},{"month":"2026-02","fortinet_cna_cves":9},{"month":"2026-03","fortinet_cna_cves":22},{"month":"2026-04","fortinet_cna_cves":28},{"month":"2026-05","fortinet_cna_cves":11},{"month":"2026-06","fortinet_cna_cves":3},{"month":"2026-07","fortinet_cna_cves":12},{"month":"2026-08","fortinet_cna_cves":7}
+  ],
+  "annual": [
+    {"year":2022,"fortinet_cna_cves":106,"partial_year":false},
+    {"year":2023,"fortinet_cna_cves":198,"partial_year":false},
+    {"year":2024,"fortinet_cna_cves":121,"partial_year":false},
+    {"year":2025,"fortinet_cna_cves":237,"partial_year":false},
+    {"year":2026,"fortinet_cna_cves":99,"partial_year":true,"through_month":"2026-08"}
+  ]
+}
