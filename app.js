@@ -26,40 +26,71 @@ function createSvgElement(name, attributes = {}) {
   return element;
 }
 
-function preferredTheme() {
-  const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-  if (storedTheme === "light" || storedTheme === "dark") {
-    return storedTheme;
+function readStoredTheme() {
+  try {
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return storedTheme === "light" || storedTheme === "dark" ? storedTheme : null;
+  } catch (error) {
+    console.warn("Patch Watch could not read the saved theme preference", error);
+    return null;
+  }
+}
+
+function saveTheme(theme) {
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch (error) {
+    console.warn("Patch Watch could not save the theme preference", error);
+  }
+}
+
+function systemTheme() {
+  try {
+    if (typeof window.matchMedia === "function" && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      return "dark";
+    }
+  } catch (error) {
+    console.warn("Patch Watch could not read the system colour scheme", error);
   }
 
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  return "light";
+}
+
+function preferredTheme() {
+  return readStoredTheme() ?? systemTheme();
 }
 
 function applyTheme(theme, persist = false) {
-  const isDark = theme === "dark";
-  document.documentElement.dataset.theme = isDark ? "dark" : "light";
-  document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+  const resolvedTheme = theme === "dark" ? "dark" : "light";
+  const isDark = resolvedTheme === "dark";
+
+  document.documentElement.dataset.theme = resolvedTheme;
+  document.documentElement.style.colorScheme = resolvedTheme;
 
   const toggle = document.querySelector("#theme-toggle");
   const label = document.querySelector("#theme-toggle-label");
   if (toggle && label) {
     toggle.setAttribute("aria-pressed", String(isDark));
+    toggle.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
     label.textContent = isDark ? "Light mode" : "Dark mode";
   }
 
   if (persist) {
-    localStorage.setItem(THEME_STORAGE_KEY, isDark ? "dark" : "light");
+    saveTheme(resolvedTheme);
   }
 }
 
 function initialiseTheme() {
-  applyTheme(preferredTheme());
-
   const toggle = document.querySelector("#theme-toggle");
-  toggle?.addEventListener("click", () => {
-    const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-    applyTheme(nextTheme, true);
-  });
+
+  if (toggle) {
+    toggle.addEventListener("click", () => {
+      const currentTheme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+      applyTheme(currentTheme === "dark" ? "light" : "dark", true);
+    });
+  }
+
+  applyTheme(preferredTheme());
 }
 
 function renderBarChart(container, items, options) {
