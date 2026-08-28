@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Patch Watch visualises Microsoft Patch Tuesday vulnerability counts over time.">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Patch Watch</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Microsoft Patch Tuesday</p>
+        <h1>Patch Watch</h1>
+        <p class="lede">New Microsoft CVEs counted at Patch Tuesday release time, tracked month by month.</p>
+      </div>
+      <section class="latest-card" aria-labelledby="latest-title">
+        <p id="latest-title" class="card-label">Latest release</p>
+        <p id="latest-month" class="latest-month">—</p>
+        <p id="latest-count" class="latest-count">—</p>
+        <p class="card-note">new Microsoft CVEs</p>
+      </section>
+    </header>
+
+    <section class="chart-card" aria-labelledby="monthly-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">60 releases</p>
+          <h2 id="monthly-heading">Month by month</h2>
+        </div>
+        <p id="monthly-summary" class="section-note"></p>
+      </div>
+      <div id="monthly-chart" class="chart-wrap" aria-live="polite"></div>
+    </section>
+
+    <section class="chart-card" aria-labelledby="annual-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Five calendar years</p>
+          <h2 id="annual-heading">Year by year</h2>
+        </div>
+        <p class="section-note">2026 is year-to-date through August.</p>
+      </div>
+      <div id="annual-chart" class="chart-wrap annual" aria-live="polite"></div>
+    </section>
+
+    <section class="method-card" aria-labelledby="method-heading">
+      <h2 id="method-heading">What the number means</h2>
+      <p>Patch Watch uses a consistent release-day count of <strong>new Microsoft CVEs</strong>. It excludes republished third-party and Chromium CVEs and, where the release-day source does so, items already resolved by Microsoft.</p>
+      <p>The live Microsoft CVRF feed is retained for future enrichment, but is not used as the historical headline count because those monthly documents can be revised after Patch Tuesday.</p>
+      <details>
+        <summary>Sources and methodology</summary>
+        <p id="source-note">Historical monthly values are compiled from release-day Patch Tuesday reporting. Microsoft Security Response Center data is used for detailed vulnerability enrichment and comparison.</p>
+        <ul>
+          <li><a href="https://msrc.microsoft.com/update-guide/" rel="noreferrer">Microsoft Security Response Center</a></li>
+          <li><a href="https://vulnerabilitydata.io/patch-tuesday" rel="noreferrer">Vulnerability Data Patch Tuesday history</a></li>
+          <li><a href="https://www.zerodayinitiative.com/" rel="noreferrer">Zero Day Initiative</a></li>
+        </ul>
+      </details>
+    </section>
+
+    <footer>
+      <p>Data last generated <time id="generated-date">—</time>.</p>
+      <p>Patch Watch is an experimental visualisation project.</p>
+    </footer>
+  </main>
+
+  <noscript>
+    <p class="noscript">Patch Watch needs JavaScript enabled to render the charts.</p>
+  </noscript>
+</body>
+</html>
