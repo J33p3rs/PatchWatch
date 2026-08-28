@@ -1,4 +1,5 @@
 const DATA_URL = "data/patches.json";
+const THEME_STORAGE_KEY = "patchwatch-theme";
 
 const monthFormatter = new Intl.DateTimeFormat("en-AU", {
   month: "short",
@@ -23,6 +24,42 @@ function createSvgElement(name, attributes = {}) {
   const element = document.createElementNS("http://www.w3.org/2000/svg", name);
   Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, String(value)));
   return element;
+}
+
+function preferredTheme() {
+  const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  if (storedTheme === "light" || storedTheme === "dark") {
+    return storedTheme;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function applyTheme(theme, persist = false) {
+  const isDark = theme === "dark";
+  document.documentElement.dataset.theme = isDark ? "dark" : "light";
+  document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+
+  const toggle = document.querySelector("#theme-toggle");
+  const label = document.querySelector("#theme-toggle-label");
+  if (toggle && label) {
+    toggle.setAttribute("aria-pressed", String(isDark));
+    label.textContent = isDark ? "Light mode" : "Dark mode";
+  }
+
+  if (persist) {
+    localStorage.setItem(THEME_STORAGE_KEY, isDark ? "dark" : "light");
+  }
+}
+
+function initialiseTheme() {
+  applyTheme(preferredTheme());
+
+  const toggle = document.querySelector("#theme-toggle");
+  toggle?.addEventListener("click", () => {
+    const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    applyTheme(nextTheme, true);
+  });
 }
 
 function renderBarChart(container, items, options) {
@@ -178,6 +215,8 @@ function showError(message) {
 }
 
 async function initialise() {
+  initialiseTheme();
+
   try {
     const response = await fetch(DATA_URL, {
       credentials: "same-origin",
