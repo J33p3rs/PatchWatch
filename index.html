@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Patch Watch visualises Microsoft Patch Tuesday vulnerability counts over time.">
+  <meta name="description" content="Patch Watch visualises vendor vulnerability disclosure volume over time.">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>Patch Watch</title>
@@ -15,27 +15,31 @@
     <header class="hero">
       <div>
         <div class="hero-topline">
-          <p class="eyebrow">Microsoft Patch Tuesday</p>
+          <p id="vendor-eyebrow" class="eyebrow">Microsoft Patch Tuesday</p>
           <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false">
             <span class="theme-toggle-icon" aria-hidden="true">◐</span>
             <span id="theme-toggle-label">Dark mode</span>
           </button>
         </div>
         <h1>Patch Watch</h1>
-        <p class="lede">New Microsoft CVEs counted at Patch Tuesday release time, tracked month by month.</p>
+        <p id="vendor-lede" class="lede">New Microsoft CVEs counted at Patch Tuesday release time, tracked month by month.</p>
+        <div class="vendor-selector" role="group" aria-label="Select vendor">
+          <button class="vendor-button is-active" type="button" data-vendor="microsoft" aria-pressed="true">Microsoft</button>
+          <button class="vendor-button" type="button" data-vendor="fortinet" aria-pressed="false">Fortinet</button>
+        </div>
       </div>
       <section class="latest-card" aria-labelledby="latest-title">
         <p id="latest-title" class="card-label">Latest release</p>
         <p id="latest-month" class="latest-month">—</p>
         <p id="latest-count" class="latest-count">—</p>
-        <p class="card-note">new Microsoft CVEs</p>
+        <p id="latest-note" class="card-note">new Microsoft CVEs</p>
       </section>
     </header>
 
     <section class="chart-card" aria-labelledby="monthly-heading">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">60 releases</p>
+          <p class="eyebrow">60 months</p>
           <h2 id="monthly-heading">Month by month</h2>
         </div>
         <p id="monthly-summary" class="section-note"></p>
@@ -56,8 +60,10 @@
 
     <section class="method-card" aria-labelledby="method-heading">
       <h2 id="method-heading">What the number means</h2>
-      <p>Patch Watch uses a consistent release-day count of <strong>new Microsoft CVEs</strong>. It excludes republished third-party and Chromium CVEs and, where the release-day source does so, items already resolved by Microsoft.</p>
-      <p>The live Microsoft CVRF feed is retained for future enrichment, but is not used as the historical headline count because those monthly documents can be revised after Patch Tuesday.</p>
+      <div id="method-copy">
+        <p>Patch Watch uses a consistent release-day count of <strong>new Microsoft CVEs</strong>. It excludes republished third-party and Chromium CVEs and, where the release-day source does so, items already resolved by Microsoft.</p>
+        <p>The live Microsoft CVRF feed is retained for future enrichment, but is not used as the historical headline count because those monthly documents can be revised after Patch Tuesday.</p>
+      </div>
     </section>
 
     <footer>
