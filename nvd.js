@@ -13,7 +13,28 @@ const COMPARISON_SERIES = {
   firefox: { label: "Firefox", dataUrl: "data/firefox.json", valueKey: "firefox_security_cves" },
 };
 
+const VALID_COMPARISONS = new Set(Object.keys(COMPARISON_SERIES));
 const comparisonDatasets = new Map();
+
+function readUrlParam(name, validValues) {
+  try {
+    const value = new URL(window.location.href).searchParams.get(name);
+    return validValues.has(value) ? value : null;
+  } catch (error) {
+    console.warn(`Patch Watch could not read the ${name} URL parameter`, error);
+    return null;
+  }
+}
+
+function updateUrlParam(name, value) {
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set(name, value);
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  } catch (error) {
+    console.warn(`Patch Watch could not update the ${name} URL parameter`, error);
+  }
+}
 
 const monthFormatter = new Intl.DateTimeFormat("en-AU", {
   month: "short",
@@ -84,8 +105,13 @@ function applyTheme(theme, persist = false) {
 
 function initialiseTheme() {
   const selector = document.querySelector("#theme-select");
-  if (selector) selector.addEventListener("change", () => applyTheme(selector.value, true));
-  applyTheme(readStoredTheme() ?? systemTheme());
+  if (selector) {
+    selector.addEventListener("change", () => {
+      applyTheme(selector.value, true);
+      updateUrlParam("theme", selector.value);
+    });
+  }
+  applyTheme(readUrlParam("theme", VALID_THEMES) ?? readStoredTheme() ?? systemTheme());
 }
 
 function renderBarChart(container, items, options) {
@@ -296,9 +322,13 @@ function initialiseComparisonSelector(nvdData) {
     option.textContent = config.label;
     selector.appendChild(option);
   });
-  selector.value = DEFAULT_COMPARISON;
-  selector.addEventListener("change", () => renderComparison(selector.value, nvdData));
-  renderComparison(DEFAULT_COMPARISON, nvdData);
+  const requestedComparison = readUrlParam("compare", VALID_COMPARISONS) ?? DEFAULT_COMPARISON;
+  selector.value = requestedComparison;
+  selector.addEventListener("change", () => {
+    renderComparison(selector.value, nvdData);
+    updateUrlParam("compare", selector.value);
+  });
+  renderComparison(requestedComparison, nvdData);
 }
 
 function showError() {

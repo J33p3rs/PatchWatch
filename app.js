@@ -120,6 +120,8 @@ const VENDORS = {
   },
 };
 
+const VALID_VIEWS = new Set(["all", ...Object.keys(VENDORS)]);
+
 const ALL_VIEW = {
   label: "All",
   eyebrow: "All tracked vendors",
@@ -145,6 +147,26 @@ const monthFormatter = new Intl.DateTimeFormat("en-AU", {
 
 const datasets = new Map();
 let activeView = DEFAULT_VIEW;
+
+function readUrlParam(name, validValues) {
+  try {
+    const value = new URL(window.location.href).searchParams.get(name);
+    return validValues.has(value) ? value : null;
+  } catch (error) {
+    console.warn(`Patch Watch could not read the ${name} URL parameter`, error);
+    return null;
+  }
+}
+
+function updateUrlParam(name, value) {
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set(name, value);
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  } catch (error) {
+    console.warn(`Patch Watch could not update the ${name} URL parameter`, error);
+  }
+}
 
 function parseMonth(month) {
   const [year, monthNumber] = month.split("-").map(Number);
@@ -207,9 +229,12 @@ function applyTheme(theme, persist = false) {
 function initialiseTheme() {
   const selector = document.querySelector("#theme-select");
   if (selector) {
-    selector.addEventListener("change", () => applyTheme(selector.value, true));
+    selector.addEventListener("change", () => {
+      applyTheme(selector.value, true);
+      updateUrlParam("theme", selector.value);
+    });
   }
-  applyTheme(readStoredTheme() ?? systemTheme());
+  applyTheme(readUrlParam("theme", VALID_THEMES) ?? readStoredTheme() ?? systemTheme());
 }
 
 function initialiseLocalVisitCounter() {
@@ -375,7 +400,10 @@ function buildVendorSelector() {
     button.dataset.vendor = key;
     button.textContent = label;
     button.setAttribute("aria-pressed", "false");
-    button.addEventListener("click", () => renderView(key));
+    button.addEventListener("click", () => {
+      renderView(key);
+      updateUrlParam("vendor", key);
+    });
     selector.appendChild(button);
   });
 }
@@ -480,6 +508,7 @@ async function loadDataset(vendor) {
 async function initialise() {
   initialiseTheme();
   initialiseLocalVisitCounter();
+  activeView = readUrlParam("vendor", VALID_VIEWS) ?? DEFAULT_VIEW;
   buildVendorSelector();
 
   try {
