@@ -99,6 +99,25 @@ const VENDORS = {
       "This avoids historical CVE List migration timestamps. It counts public Chrome CVEs, not Google's broader security-fix total; a CVE repeated in later Desktop Stable references is attributed only to its earliest release month.",
     ],
   },
+  firefox: {
+    label: "Firefox",
+    dataUrl: "data/firefox.json",
+    valueKey: "firefox_security_cves",
+    includeInAll: true,
+    eyebrow: "Mozilla Firefox security releases",
+    lede: "Unique CVEs documented across Firefox desktop and Firefox ESR security advisories each calendar month.",
+    latestTitle: "Latest month",
+    latestNote: "Firefox security CVEs",
+    valueDescription: "Firefox security CVEs",
+    monthlyAria: "Bar chart of monthly unique CVEs documented in Mozilla Firefox desktop and Firefox ESR security advisories",
+    annualAria: "Bar chart of annual Firefox desktop and Firefox ESR security advisory CVE totals",
+    averageSuffix: "unique Firefox security CVEs per month across this window.",
+    strongText: "unique CVE IDs",
+    method: [
+      "Patch Watch counts unique CVE IDs documented across Mozilla Foundation Security Advisories for versioned Firefox desktop and Firefox ESR releases in each calendar month.",
+      "Standard and ESR advisories in the same month are unioned by CVE ID, so the same vulnerability is counted once within the Firefox series. Firefox-for-iOS-only and Firefox-for-Android-only advisories are excluded.",
+    ],
+  },
 };
 
 const ALL_VIEW = {
