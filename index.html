@@ -19,7 +19,7 @@
     <header class="hero">
       <div>
         <div class="hero-topline">
-          <p id="vendor-eyebrow" class="eyebrow">Microsoft Patch Tuesday</p>
+          <p id="vendor-eyebrow" class="eyebrow">All tracked vendors</p>
           <label class="theme-control" for="theme-select">
             <span class="theme-control-label">Display</span>
             <select id="theme-select" aria-label="Select display theme">
@@ -34,17 +34,14 @@
           <span>NOW WITH MULTI-VENDOR CYBER DATA</span>
         </div>
         <h1>Patch Watch</h1>
-        <p id="vendor-lede" class="lede">New Microsoft CVEs counted at Patch Tuesday release time, tracked month by month.</p>
-        <div class="vendor-selector" role="group" aria-label="Select vendor">
-          <button class="vendor-button is-active" type="button" data-vendor="microsoft" aria-pressed="true">Microsoft</button>
-          <button class="vendor-button" type="button" data-vendor="fortinet" aria-pressed="false">Fortinet</button>
-        </div>
+        <p id="vendor-lede" class="lede">Combined headline vulnerability counts across every vendor currently tracked by Patch Watch.</p>
+        <div id="vendor-selector" class="vendor-selector" role="group" aria-label="Select vendor view"></div>
       </div>
       <section class="latest-card" aria-labelledby="latest-title">
-        <p id="latest-title" class="card-label">Latest release</p>
+        <p id="latest-title" class="card-label">Latest common month</p>
         <p id="latest-month" class="latest-month">—</p>
         <p id="latest-count" class="latest-count">—</p>
-        <p id="latest-note" class="card-note">new Microsoft CVEs</p>
+        <p id="latest-note" class="card-note">combined tracked-vendor count</p>
         <div class="retro-only retro-counter" aria-label="Local visit counter">
           <span>YOUR VISITS</span>
           <output id="retro-visit-count">000001</output>
@@ -55,7 +52,7 @@
     <section class="chart-card" aria-labelledby="monthly-heading">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">60 months</p>
+          <p id="monthly-window-label" class="eyebrow">60 common months</p>
           <h2 id="monthly-heading">Month by month</h2>
         </div>
         <p id="monthly-summary" class="section-note"></p>
@@ -66,10 +63,10 @@
     <section class="chart-card" aria-labelledby="annual-heading">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">Five calendar years</p>
+          <p id="annual-window-label" class="eyebrow">Five calendar years</p>
           <h2 id="annual-heading">Year by year</h2>
         </div>
-        <p class="section-note">2026 is year-to-date through August.</p>
+        <p id="annual-note" class="section-note">2026 is year-to-date through August.</p>
       </div>
       <div id="annual-chart" class="chart-wrap annual" aria-live="polite"></div>
     </section>
@@ -77,8 +74,8 @@
     <section class="method-card" aria-labelledby="method-heading">
       <h2 id="method-heading">What the number means</h2>
       <div id="method-copy">
-        <p>Patch Watch uses a consistent release-day count of <strong>new Microsoft CVEs</strong>. It excludes republished third-party and Chromium CVEs and, where the release-day source does so, items already resolved by Microsoft.</p>
-        <p>The live Microsoft CVRF feed is retained for future enrichment, but is not used as the historical headline count because those monthly documents can be revised after Patch Tuesday.</p>
+        <p>The All vendors view sums each vendor's existing Patch Watch headline metric for months where every included vendor has data.</p>
+        <p>The total is an operational comparison measure, not a count of globally unique CVEs and not a claim that each vendor uses the same disclosure or patch-release process.</p>
       </div>
     </section>
 
