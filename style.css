@@ -155,7 +155,10 @@ a:hover, a:focus-visible { color: var(--accent-strong); }
 }
 
 .vendor-selector {
-  display: inline-flex;
+  display: flex;
+  flex-wrap: wrap;
+  width: fit-content;
+  max-width: 100%;
   gap: 4px;
   margin-top: 24px;
   padding: 4px;
