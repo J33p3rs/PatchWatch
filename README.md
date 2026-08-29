@@ -12,7 +12,11 @@ Patch Watch currently includes a vendor/platform dashboard with:
 - **Chrome** — unique public Chrome CNA CVEs attributed to their first referenced Google Chrome Desktop Stable release month; and
 - **Firefox** — unique CVEs documented across Mozilla Firefox desktop and Firefox ESR security advisories announced in each calendar month.
 
+Horizontally scrollable charts open at their **most recent/right-most data** on first render while retaining normal scrolling back through older history.
+
 Patch Watch also includes a separate **NVD global** page showing non-rejected CVEs published into the National Vulnerability Database per calendar month.
+
+The NVD page includes a **Vendor vs global** line graph. It compares the selected vendor/platform with NVD using 12-month rolling averages indexed to 100 at the first common comparison point. This is a relative-trend comparison rather than a misleading raw dual-axis comparison between very different scales and metrics.
 
 NVD is intentionally **excluded from All** because it is an ecosystem-wide index containing CVEs already represented in the vendor/platform feeds. Adding it to All would double-count extensively.
 
