@@ -12,14 +12,26 @@
 </head>
 <body>
   <main class="shell">
+    <div class="retro-only retro-marquee" aria-hidden="true">
+      <span>*** PATCHWATCH 90 *** VULNERABILITY DATA ON THE INFORMATION SUPERHIGHWAY ***</span>
+    </div>
+
     <header class="hero">
       <div>
         <div class="hero-topline">
           <p id="vendor-eyebrow" class="eyebrow">Microsoft Patch Tuesday</p>
-          <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false">
-            <span class="theme-toggle-icon" aria-hidden="true">◐</span>
-            <span id="theme-toggle-label">Dark mode</span>
-          </button>
+          <label class="theme-control" for="theme-select">
+            <span class="theme-control-label">Display</span>
+            <select id="theme-select" aria-label="Select display theme">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="patchwatch90">PatchWatch 90</option>
+            </select>
+          </label>
+        </div>
+        <div class="retro-only retro-status" aria-hidden="true">
+          <span class="retro-live">LIVE!</span>
+          <span>NOW WITH MULTI-VENDOR CYBER DATA</span>
         </div>
         <h1>Patch Watch</h1>
         <p id="vendor-lede" class="lede">New Microsoft CVEs counted at Patch Tuesday release time, tracked month by month.</p>
@@ -33,6 +45,10 @@
         <p id="latest-month" class="latest-month">—</p>
         <p id="latest-count" class="latest-count">—</p>
         <p id="latest-note" class="card-note">new Microsoft CVEs</p>
+        <div class="retro-only retro-counter" aria-label="Local visit counter">
+          <span>YOUR VISITS</span>
+          <output id="retro-visit-count">000001</output>
+        </div>
       </section>
     </header>
 
@@ -66,9 +82,22 @@
       </div>
     </section>
 
+    <div class="retro-only retro-webring" aria-hidden="true">
+      <span>← PREVIOUS CYBER SITE</span>
+      <span>PATCHWATCH WEBRING</span>
+      <span>NEXT CYBER SITE →</span>
+    </div>
+
     <footer>
-      <p>Data last generated <time id="generated-date">—</time>.</p>
-      <p>Patch Watch is an experimental visualisation project.</p>
+      <div>
+        <p>Data last generated <time id="generated-date">—</time>.</p>
+        <p>Patch Watch is an experimental visualisation project.</p>
+      </div>
+      <div class="retro-only retro-footer-copy">
+        <p>BEST VIEWED AT 800×600</p>
+        <p>NETSCAPE NAVIGATOR 4.0 COMPATIBLE*</p>
+        <p class="retro-footnote">*probably</p>
+      </div>
     </footer>
   </main>
 
