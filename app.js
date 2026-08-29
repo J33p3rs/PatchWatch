@@ -1,5 +1,7 @@
 const THEME_STORAGE_KEY = "patchwatch-theme";
+const VISIT_STORAGE_KEY = "patchwatch-local-visits";
 const DEFAULT_VENDOR = "microsoft";
+const VALID_THEMES = new Set(["light", "dark", "patchwatch90"]);
 
 const VENDORS = {
   microsoft: {
@@ -67,7 +69,7 @@ function createSvgElement(name, attributes = {}) {
 function readStoredTheme() {
   try {
     const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    return storedTheme === "light" || storedTheme === "dark" ? storedTheme : null;
+    return VALID_THEMES.has(storedTheme) ? storedTheme : null;
   } catch (error) {
     console.warn("Patch Watch could not read the saved theme preference", error);
     return null;
@@ -94,30 +96,35 @@ function systemTheme() {
 }
 
 function applyTheme(theme, persist = false) {
-  const resolvedTheme = theme === "dark" ? "dark" : "light";
-  const isDark = resolvedTheme === "dark";
+  const resolvedTheme = VALID_THEMES.has(theme) ? theme : "light";
   document.documentElement.dataset.theme = resolvedTheme;
-  document.documentElement.style.colorScheme = resolvedTheme;
+  document.documentElement.style.colorScheme = resolvedTheme === "light" ? "light" : "dark";
 
-  const toggle = document.querySelector("#theme-toggle");
-  const label = document.querySelector("#theme-toggle-label");
-  if (toggle && label) {
-    toggle.setAttribute("aria-pressed", String(isDark));
-    toggle.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
-    label.textContent = isDark ? "Light mode" : "Dark mode";
-  }
+  const selector = document.querySelector("#theme-select");
+  if (selector) selector.value = resolvedTheme;
   if (persist) saveTheme(resolvedTheme);
 }
 
 function initialiseTheme() {
-  const toggle = document.querySelector("#theme-toggle");
-  if (toggle) {
-    toggle.addEventListener("click", () => {
-      const current = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
-      applyTheme(current === "dark" ? "light" : "dark", true);
-    });
+  const selector = document.querySelector("#theme-select");
+  if (selector) {
+    selector.addEventListener("change", () => applyTheme(selector.value, true));
   }
   applyTheme(readStoredTheme() ?? systemTheme());
+}
+
+function initialiseLocalVisitCounter() {
+  let visits = 1;
+  try {
+    const previous = Number.parseInt(window.localStorage.getItem(VISIT_STORAGE_KEY) ?? "0", 10);
+    visits = Number.isFinite(previous) && previous >= 0 ? previous + 1 : 1;
+    window.localStorage.setItem(VISIT_STORAGE_KEY, String(visits));
+  } catch (error) {
+    console.warn("Patch Watch could not update the local visit counter", error);
+  }
+
+  const counter = document.querySelector("#retro-visit-count");
+  if (counter) counter.value = String(visits).padStart(6, "0");
 }
 
 function renderBarChart(container, items, options) {
@@ -278,6 +285,8 @@ async function loadDataset(vendor) {
 
 async function initialise() {
   initialiseTheme();
+  initialiseLocalVisitCounter();
+
   document.querySelectorAll(".vendor-button").forEach((button) => {
     button.addEventListener("click", () => renderVendor(button.dataset.vendor));
   });
