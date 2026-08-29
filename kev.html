@@ -3,31 +3,31 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Patch Watch NVD global vulnerability publication trends.">
+  <meta name="description" content="Patch Watch CISA Known Exploited Vulnerabilities trends.">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <title>Patch Watch — NVD</title>
+  <title>Patch Watch — CISA KEV</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="trend.css">
-  <script src="nvd.js" defer></script>
+  <script src="kev.js" defer></script>
   <script src="chart-scroll.js" defer></script>
 </head>
 <body>
   <main class="shell">
     <nav class="site-nav" aria-label="Patch Watch sections">
       <a href="index.html">Vendor dashboard</a>
-      <a href="nvd.html" aria-current="page">NVD global</a>
-      <a href="kev.html">CISA KEV</a>
+      <a href="nvd.html">NVD global</a>
+      <a href="kev.html" aria-current="page">CISA KEV</a>
     </nav>
 
     <div class="retro-only retro-marquee" aria-hidden="true">
-      <span>*** PATCHWATCH 90 *** GLOBAL VULNERABILITY LANDSCAPE *** NVD ONLINE ***</span>
+      <span>*** PATCHWATCH 90 *** KNOWN EXPLOITED VULNERABILITIES *** CISA KEV ONLINE ***</span>
     </div>
 
     <header class="hero">
       <div>
         <div class="hero-topline">
-          <p class="eyebrow">Global vulnerability landscape</p>
+          <p class="eyebrow">Known exploited vulnerabilities</p>
           <label class="theme-control" for="theme-select">
             <span class="theme-control-label">Display</span>
             <select id="theme-select" aria-label="Select display theme">
@@ -39,47 +39,48 @@
         </div>
         <div class="retro-only retro-status" aria-hidden="true">
           <span class="retro-live">LIVE!</span>
-          <span>NATIONAL VULNERABILITY DATABASE FEED</span>
+          <span>CISA KEV CATALOGUE TRACKER</span>
         </div>
-        <h1>NVD Watch</h1>
-        <p class="lede">Non-rejected CVEs published into the National Vulnerability Database, tracked month by month as a separate global series.</p>
-        <p class="view-boundary-note"><strong>Not included in All:</strong> NVD contains vulnerabilities already represented in vendor/platform feeds, so adding it to the All total would double-count extensively.</p>
+        <h1>KEV Watch</h1>
+        <p class="lede">CVEs added to CISA's Known Exploited Vulnerabilities catalogue, tracked by the date CISA added them.</p>
+        <p class="view-boundary-note"><strong>Not included in All:</strong> KEV is a curated exploited-vulnerability catalogue containing CVEs already represented in vendor/platform feeds.</p>
       </div>
       <section class="latest-card" aria-labelledby="latest-title">
         <p id="latest-title" class="card-label">Latest month</p>
         <p id="latest-month" class="latest-month">—</p>
         <p id="latest-count" class="latest-count">—</p>
-        <p class="card-note">NVD published CVEs</p>
+        <p class="card-note">CVEs added to KEV</p>
       </section>
     </header>
 
     <section class="chart-card" aria-labelledby="monthly-heading">
       <div class="section-heading">
         <div>
-          <p id="monthly-window-label" class="eyebrow">60 months</p>
+          <p id="monthly-window-label" class="eyebrow">Catalogue history</p>
           <h2 id="monthly-heading">Month by month</h2>
         </div>
         <p id="monthly-summary" class="section-note"></p>
       </div>
+      <p class="comparison-explainer"><strong>Catalogue launch:</strong> November 2021 contains CISA's initial catalogue population of 309 CVEs. It is retained as real catalogue history, but treated as a one-off seed rather than a normal monthly trend point.</p>
       <div id="monthly-chart" class="chart-wrap" aria-live="polite"></div>
     </section>
 
     <section class="chart-card" aria-labelledby="comparison-heading">
       <div class="section-heading trend-heading">
         <div>
-          <p class="eyebrow">Vendor vs global</p>
-          <h2 id="comparison-heading">Is the vendor following the global trend?</h2>
+          <p class="eyebrow">Vendor vs exploited trend</p>
+          <h2 id="comparison-heading">Is the vendor following the KEV trend?</h2>
         </div>
         <label class="comparison-control" for="comparison-vendor">
           <span>Compare</span>
-          <select id="comparison-vendor" aria-label="Select vendor or platform to compare with NVD"></select>
+          <select id="comparison-vendor" aria-label="Select vendor or platform to compare with CISA KEV"></select>
         </label>
       </div>
-      <p class="comparison-explainer">Both series use a 12-month rolling average and are indexed to <strong>100 at their first common comparison point</strong>. This compares direction and relative growth rather than misleading raw counts on very different scales.</p>
+      <p class="comparison-explainer">Both series use 12-month rolling averages and are indexed to <strong>100 at the first clean common comparison point</strong>. The comparison starts in November 2022 so the initial November 2021 KEV catalogue seed is outside the rolling window.</p>
       <p id="comparison-summary" class="trend-summary" aria-live="polite"></p>
       <div class="trend-legend" aria-hidden="true">
         <span><i class="trend-swatch trend-swatch-vendor"></i><span id="comparison-vendor-label">Vendor</span></span>
-        <span><i class="trend-swatch trend-swatch-global"></i>NVD global</span>
+        <span><i class="trend-swatch trend-swatch-global"></i>CISA KEV</span>
       </div>
       <div id="comparison-chart" class="chart-wrap trend-chart" aria-live="polite"></div>
     </section>
@@ -97,25 +98,25 @@
 
     <section class="method-card" aria-labelledby="method-heading">
       <h2 id="method-heading">What the number means</h2>
-      <p>Patch Watch queries the NVD CVE API 2.0 for each calendar month and counts records returned by publication date with rejected CVEs excluded.</p>
-      <p>This is a <strong>global vulnerability publication measure</strong>, not a vendor patch count. NVD is deliberately isolated from the vendor/platform All calculation because the same CVEs can already appear in Microsoft, Fortinet, Apple, Chrome, Firefox and future platform feeds.</p>
-      <p>The vendor-vs-global chart compares normalised rolling trends, not raw totals. It is intended to answer questions such as whether one vendor's disclosure volume is increasing faster or slower than the broader NVD publication trend.</p>
+      <p>Patch Watch counts entries in CISA's Known Exploited Vulnerabilities catalogue by each record's <code>dateAdded</code>. The source is CISA's official <code>cisagov/kev-data</code> GitHub mirror of the canonical catalogue.</p>
+      <p>This measures <strong>when CISA added a CVE to KEV</strong>. It does not mean exploitation began that month, and it is not a vendor patch count or a count of newly published CVEs.</p>
+      <p>The vendor comparison uses normalised rolling trends rather than raw totals. It asks whether a vendor's vulnerability-disclosure activity is moving faster or slower than the rate at which vulnerabilities are being added to KEV.</p>
     </section>
 
     <div class="retro-only retro-webring" aria-hidden="true">
-      <span>← VENDOR DASHBOARD</span>
-      <span>PATCHWATCH GLOBAL ZONE</span>
-      <span>NVD DATA →</span>
+      <span>← NVD GLOBAL</span>
+      <span>PATCHWATCH EXPLOITED ZONE</span>
+      <span>CISA KEV →</span>
     </div>
 
     <footer>
       <div>
         <p>Data last generated <time id="generated-date">—</time>.</p>
-        <p>Source: National Vulnerability Database CVE API 2.0.</p>
+        <p>Source: CISA Known Exploited Vulnerabilities catalogue.</p>
       </div>
       <div class="retro-only retro-footer-copy">
         <p>BEST VIEWED AT 800×600</p>
-        <p>CYBERSPACE NEVER SLEEPS</p>
+        <p>PATCH YOUR STUFF</p>
       </div>
     </footer>
   </main>
