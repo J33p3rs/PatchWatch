@@ -226,6 +226,26 @@ function intersectSets(sets) {
   return [...sets[0]].filter((value) => sets.every((set) => set.has(value)));
 }
 
+function deriveAnnualFromMonthly(monthly) {
+  const byYear = new Map();
+  monthly.forEach((entry) => {
+    const year = Number(entry.month.slice(0, 4));
+    const current = byYear.get(year) ?? { total: 0, months: 0 };
+    current.total += entry.combined_vendor_cves;
+    current.months += 1;
+    byYear.set(year, current);
+  });
+
+  return [...byYear.entries()]
+    .sort(([a], [b]) => a - b)
+    .slice(-5)
+    .map(([year, summary]) => ({
+      year,
+      combined_vendor_cves: summary.total,
+      partial_year: summary.months < 12,
+    }));
+}
+
 function buildCombinedDataset() {
   const vendorKeys = aggregateVendorKeys();
   const vendorData = vendorKeys.map((key) => ({ key, config: VENDORS[key], data: datasets.get(key) }));
@@ -241,18 +261,6 @@ function buildCombinedDataset() {
     return { month, combined_vendor_cves: total };
   });
 
-  const yearSets = vendorData.map(({ data }) => new Set(data.annual.map((entry) => entry.year)));
-  const commonYears = intersectSets(yearSets).sort((a, b) => a - b).slice(-5);
-  const annual = commonYears.map((year) => {
-    const records = vendorData.map(({ data }) => data.annual.find((entry) => entry.year === year));
-    const total = records.reduce((sum, record, index) => sum + record[vendorData[index].config.valueKey], 0);
-    return {
-      year,
-      combined_vendor_cves: total,
-      partial_year: records.some((record) => Boolean(record.partial_year)),
-    };
-  });
-
   const generatedDates = vendorData
     .map(({ data }) => data.metadata?.generated)
     .filter(Boolean)
@@ -264,7 +272,7 @@ function buildCombinedDataset() {
       included_vendors: vendorKeys,
     },
     monthly,
-    annual,
+    annual: deriveAnnualFromMonthly(monthly),
   };
 }
 
