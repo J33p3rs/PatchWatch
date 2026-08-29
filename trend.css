@@ -1,0 +1,141 @@
+.trend-heading {
+  align-items: flex-start;
+}
+
+.comparison-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.comparison-control select {
+  font: inherit;
+  font-weight: 700;
+  border: 1px solid var(--toggle-border);
+  border-radius: 999px;
+  padding: 8px 30px 8px 12px;
+  background: var(--toggle-bg);
+  color: var(--text);
+}
+
+.comparison-control select:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 2px;
+}
+
+.comparison-explainer {
+  max-width: 860px;
+  margin-bottom: 10px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.trend-summary {
+  max-width: 900px;
+  margin-bottom: 14px;
+  color: var(--heading);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.trend-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.trend-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.trend-swatch {
+  display: inline-block;
+  width: 28px;
+  height: 0;
+  border-top: 3px solid var(--accent-strong);
+}
+
+.trend-swatch-global {
+  border-top-color: var(--partial);
+  border-top-style: dashed;
+}
+
+.trend-line {
+  fill: none;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.trend-line-vendor {
+  stroke: var(--accent-strong);
+}
+
+.trend-line-global {
+  stroke: var(--partial);
+  stroke-dasharray: 10 7;
+}
+
+.trend-baseline {
+  stroke: var(--axis);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 5;
+  opacity: 0.8;
+}
+
+.trend-point {
+  stroke: var(--card-bg);
+  stroke-width: 2;
+}
+
+.trend-point-vendor {
+  fill: var(--accent-strong);
+}
+
+.trend-point-global {
+  fill: var(--partial);
+}
+
+:root[data-theme="patchwatch90"] .comparison-control select {
+  border: 3px outset #c0c0c0;
+  border-radius: 0;
+  background: #c0c0c0;
+  color: #000000;
+}
+
+:root[data-theme="patchwatch90"] .trend-line-vendor,
+:root[data-theme="patchwatch90"] .trend-swatch-vendor {
+  stroke: #00ff00;
+  border-top-color: #00ff00;
+}
+
+:root[data-theme="patchwatch90"] .trend-line-global,
+:root[data-theme="patchwatch90"] .trend-swatch-global {
+  stroke: #ff00ff;
+  border-top-color: #ff00ff;
+}
+
+:root[data-theme="patchwatch90"] .trend-point-vendor { fill: #00ff00; }
+:root[data-theme="patchwatch90"] .trend-point-global { fill: #ff00ff; }
+
+@media (max-width: 760px) {
+  .trend-heading {
+    flex-direction: column;
+  }
+
+  .comparison-control {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
