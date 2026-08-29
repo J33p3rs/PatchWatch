@@ -1,41 +1,64 @@
 const THEME_STORAGE_KEY = "patchwatch-theme";
 const VISIT_STORAGE_KEY = "patchwatch-local-visits";
-const DEFAULT_VENDOR = "microsoft";
+const DEFAULT_VIEW = "all";
 const VALID_THEMES = new Set(["light", "dark", "patchwatch90"]);
 
 const VENDORS = {
   microsoft: {
+    label: "Microsoft",
     dataUrl: "data/patches.json",
     valueKey: "new_microsoft_cves",
+    includeInAll: true,
     eyebrow: "Microsoft Patch Tuesday",
     lede: "New Microsoft CVEs counted at Patch Tuesday release time, tracked month by month.",
     latestTitle: "Latest release",
     latestNote: "new Microsoft CVEs",
     valueDescription: "new Microsoft CVEs",
-    monthlyAria: "Bar chart of monthly Microsoft Patch Tuesday CVE counts for the most recent 60 releases",
-    annualAria: "Bar chart of annual Microsoft Patch Tuesday CVE totals from 2022 to 2026",
+    monthlyAria: "Bar chart of monthly Microsoft Patch Tuesday CVE counts for the most recent releases",
+    annualAria: "Bar chart of annual Microsoft Patch Tuesday CVE totals",
     averageSuffix: "new CVEs per release across this window.",
+    strongText: "new Microsoft CVEs",
     method: [
       "Patch Watch uses a consistent release-day count of new Microsoft CVEs. It excludes republished third-party and Chromium CVEs and, where the release-day source does so, items already resolved by Microsoft.",
       "The live Microsoft CVRF feed is retained for future enrichment, but is not used as the historical headline count because those monthly documents can be revised after Patch Tuesday.",
     ],
   },
   fortinet: {
+    label: "Fortinet",
     dataUrl: "data/fortinet.json",
     valueKey: "fortinet_cna_cves",
+    includeInAll: true,
     eyebrow: "Fortinet disclosures",
     lede: "Fortinet-assigned CNA CVEs published each calendar month, including regular and out-of-cycle disclosures.",
     latestTitle: "Latest month",
     latestNote: "Fortinet CNA CVEs",
     valueDescription: "Fortinet CNA CVEs",
-    monthlyAria: "Bar chart of monthly Fortinet-assigned CNA CVE publication counts for the most recent 60 months",
-    annualAria: "Bar chart of annual Fortinet-assigned CNA CVE publication totals from 2022 to 2026",
+    monthlyAria: "Bar chart of monthly Fortinet-assigned CNA CVE publication counts",
+    annualAria: "Bar chart of annual Fortinet-assigned CNA CVE publication totals",
     averageSuffix: "Fortinet CNA CVEs per month across this window.",
+    strongText: "Fortinet-assigned CNA CVEs",
     method: [
       "Patch Watch counts Fortinet-assigned CNA CVEs by their CVE List publication month. This includes both Fortinet's regular monthly PSIRT disclosures and out-of-cycle publications.",
       "This is disclosure volume, not a claim that every Fortinet CVE belongs to a Patch-Tuesday-style release. Fortinet's historical advisory cadence changed and critical or actively exploited vulnerabilities can be released out of cycle.",
     ],
   },
+};
+
+const ALL_VIEW = {
+  label: "All",
+  eyebrow: "All tracked vendors",
+  lede: "Combined headline vulnerability counts across every vendor currently tracked by Patch Watch.",
+  latestTitle: "Latest common month",
+  latestNote: "combined tracked-vendor count",
+  valueDescription: "combined tracked-vendor CVEs",
+  monthlyAria: "Bar chart of combined monthly headline vulnerability counts across all tracked Patch Watch vendors",
+  annualAria: "Bar chart of combined annual headline vulnerability counts across all tracked Patch Watch vendors",
+  averageSuffix: "combined tracked-vendor CVEs per common month across this window.",
+  strongText: "existing Patch Watch headline metric",
+  method: [
+    "The All vendors view sums each vendor's existing Patch Watch headline metric for months where every included vendor has data.",
+    "The total is an operational comparison measure, not a count of globally unique CVEs and not a claim that each vendor uses the same disclosure or patch-release process. Adding a future vendor to the configured dataset automatically adds it to this view unless it is explicitly excluded.",
+  ],
 };
 
 const monthFormatter = new Intl.DateTimeFormat("en-AU", {
@@ -45,7 +68,7 @@ const monthFormatter = new Intl.DateTimeFormat("en-AU", {
 });
 
 const datasets = new Map();
-let activeVendor = DEFAULT_VENDOR;
+let activeView = DEFAULT_VIEW;
 
 function parseMonth(month) {
   const [year, monthNumber] = month.split("-").map(Number);
@@ -194,14 +217,110 @@ function renderBarChart(container, items, options) {
   container.appendChild(svg);
 }
 
-function renderVendor(vendor) {
-  const config = VENDORS[vendor];
-  const data = datasets.get(vendor);
-  if (!config || !data) return;
-  activeVendor = vendor;
+function aggregateVendorKeys() {
+  return Object.keys(VENDORS).filter((key) => VENDORS[key].includeInAll !== false);
+}
+
+function intersectSets(sets) {
+  if (sets.length === 0) return [];
+  return [...sets[0]].filter((value) => sets.every((set) => set.has(value)));
+}
+
+function buildCombinedDataset() {
+  const vendorKeys = aggregateVendorKeys();
+  const vendorData = vendorKeys.map((key) => ({ key, config: VENDORS[key], data: datasets.get(key) }));
+  if (vendorData.some((entry) => !entry.data)) return null;
+
+  const monthSets = vendorData.map(({ data }) => new Set(data.monthly.map((entry) => entry.month)));
+  const commonMonths = intersectSets(monthSets).sort().slice(-60);
+  const monthly = commonMonths.map((month) => {
+    const total = vendorData.reduce((sum, { config, data }) => {
+      const entry = data.monthly.find((item) => item.month === month);
+      return sum + entry[config.valueKey];
+    }, 0);
+    return { month, combined_vendor_cves: total };
+  });
+
+  const yearSets = vendorData.map(({ data }) => new Set(data.annual.map((entry) => entry.year)));
+  const commonYears = intersectSets(yearSets).sort((a, b) => a - b).slice(-5);
+  const annual = commonYears.map((year) => {
+    const records = vendorData.map(({ data }) => data.annual.find((entry) => entry.year === year));
+    const total = records.reduce((sum, record, index) => sum + record[vendorData[index].config.valueKey], 0);
+    return {
+      year,
+      combined_vendor_cves: total,
+      partial_year: records.some((record) => Boolean(record.partial_year)),
+    };
+  });
+
+  const generatedDates = vendorData
+    .map(({ data }) => data.metadata?.generated)
+    .filter(Boolean)
+    .sort();
+
+  return {
+    metadata: {
+      generated: generatedDates[0] ?? "—",
+      included_vendors: vendorKeys,
+    },
+    monthly,
+    annual,
+  };
+}
+
+function viewDefinition(view) {
+  if (view === "all") {
+    return {
+      config: { ...ALL_VIEW, valueKey: "combined_vendor_cves" },
+      data: buildCombinedDataset(),
+    };
+  }
+  return { config: VENDORS[view], data: datasets.get(view) };
+}
+
+function buildVendorSelector() {
+  const selector = document.querySelector("#vendor-selector");
+  if (!selector) return;
+  selector.replaceChildren();
+
+  const views = [{ key: "all", label: ALL_VIEW.label }, ...Object.entries(VENDORS).map(([key, config]) => ({ key, label: config.label }))];
+  views.forEach(({ key, label }) => {
+    const button = document.createElement("button");
+    button.className = "vendor-button";
+    button.type = "button";
+    button.dataset.vendor = key;
+    button.textContent = label;
+    button.setAttribute("aria-pressed", "false");
+    button.addEventListener("click", () => renderView(key));
+    selector.appendChild(button);
+  });
+}
+
+function renderMethod(config) {
+  const methodCopy = document.querySelector("#method-copy");
+  methodCopy.replaceChildren();
+  config.method.forEach((text, index) => {
+    const paragraph = document.createElement("p");
+    if (index === 0 && config.strongText && text.includes(config.strongText)) {
+      const [before, after = ""] = text.split(config.strongText);
+      paragraph.append(document.createTextNode(before));
+      const strong = document.createElement("strong");
+      strong.textContent = config.strongText;
+      paragraph.append(strong, document.createTextNode(after));
+    } else {
+      paragraph.textContent = text;
+    }
+    methodCopy.appendChild(paragraph);
+  });
+}
+
+function renderView(view) {
+  const { config, data } = viewDefinition(view);
+  if (!config || !data || data.monthly.length === 0) return;
+  activeView = view;
 
   document.querySelectorAll(".vendor-button").forEach((button) => {
-    const selected = button.dataset.vendor === vendor;
+    const selected = button.dataset.vendor === view;
     button.classList.toggle("is-active", selected);
     button.setAttribute("aria-pressed", String(selected));
   });
@@ -215,6 +334,12 @@ function renderVendor(vendor) {
   document.querySelector("#latest-month").textContent = formatMonth(latest.month);
   document.querySelector("#latest-count").textContent = formatNumber(latest[config.valueKey]);
   document.querySelector("#generated-date").textContent = data.metadata.generated;
+  document.querySelector("#monthly-window-label").textContent = `${data.monthly.length} ${view === "all" ? "common " : ""}months`;
+  document.querySelector("#annual-window-label").textContent = `${data.annual.length} calendar years`;
+
+  const partialYear = data.annual.findLast((entry) => entry.partial_year);
+  const annualNote = document.querySelector("#annual-note");
+  annualNote.textContent = partialYear ? `${partialYear.year} is year-to-date through ${formatMonth(latest.month).split(" ")[0]}.` : "";
 
   const monthlyItems = data.monthly.map((entry) => ({
     label: formatMonth(entry.month),
@@ -241,22 +366,7 @@ function renderVendor(vendor) {
     ariaLabel: config.annualAria, valueDescription: config.valueDescription,
   });
 
-  const methodCopy = document.querySelector("#method-copy");
-  methodCopy.replaceChildren();
-  config.method.forEach((text, index) => {
-    const paragraph = document.createElement("p");
-    if (index === 0) {
-      const strongText = vendor === "microsoft" ? "new Microsoft CVEs" : "Fortinet-assigned CNA CVEs";
-      const [before, after = ""] = text.split(strongText);
-      paragraph.append(document.createTextNode(before));
-      const strong = document.createElement("strong");
-      strong.textContent = strongText;
-      paragraph.append(strong, document.createTextNode(after));
-    } else {
-      paragraph.textContent = text;
-    }
-    methodCopy.appendChild(paragraph);
-  });
+  renderMethod(config);
 }
 
 function showError(message) {
@@ -286,14 +396,11 @@ async function loadDataset(vendor) {
 async function initialise() {
   initialiseTheme();
   initialiseLocalVisitCounter();
-
-  document.querySelectorAll(".vendor-button").forEach((button) => {
-    button.addEventListener("click", () => renderVendor(button.dataset.vendor));
-  });
+  buildVendorSelector();
 
   try {
     await Promise.all(Object.keys(VENDORS).map(loadDataset));
-    renderVendor(activeVendor);
+    renderView(activeView);
   } catch (error) {
     console.error("Patch Watch failed to initialise", error);
     showError("Patch Watch could not load its data. Please try again later.");
