@@ -11,72 +11,272 @@
     "methodology_note": "Uses the NVD CVE API 2.0 publication-date filter for each calendar month with noRejected. The API's totalResults value is the monthly headline count. NVD is an ecosystem-wide index and is intentionally excluded from the vendor/platform All total."
   },
   "monthly": [
-    {"month":"2021-09","nvd_published_cves":1902},
-    {"month":"2021-10","nvd_published_cves":1701},
-    {"month":"2021-11","nvd_published_cves":1508},
-    {"month":"2021-12","nvd_published_cves":1942},
-    {"month":"2022-01","nvd_published_cves":2016},
-    {"month":"2022-02","nvd_published_cves":1942},
-    {"month":"2022-03","nvd_published_cves":2058},
-    {"month":"2022-04","nvd_published_cves":2046},
-    {"month":"2022-05","nvd_published_cves":2021},
-    {"month":"2022-06","nvd_published_cves":2280},
-    {"month":"2022-07","nvd_published_cves":1969},
-    {"month":"2022-08","nvd_published_cves":2317},
-    {"month":"2022-09","nvd_published_cves":2197},
-    {"month":"2022-10","nvd_published_cves":1849},
-    {"month":"2022-11","nvd_published_cves":1958},
-    {"month":"2022-12","nvd_published_cves":2421},
-    {"month":"2023-01","nvd_published_cves":2337},
-    {"month":"2023-02","nvd_published_cves":2122},
-    {"month":"2023-03","nvd_published_cves":2516},
-    {"month":"2023-04","nvd_published_cves":2330},
-    {"month":"2023-05","nvd_published_cves":2418},
-    {"month":"2023-06","nvd_published_cves":2384},
-    {"month":"2023-07","nvd_published_cves":2305},
-    {"month":"2023-08","nvd_published_cves":2477},
-    {"month":"2023-09","nvd_published_cves":2148},
-    {"month":"2023-10","nvd_published_cves":2680},
-    {"month":"2023-11","nvd_published_cves":2449},
-    {"month":"2023-12","nvd_published_cves":2650},
-    {"month":"2024-01","nvd_published_cves":2594},
-    {"month":"2024-02","nvd_published_cves":2778},
-    {"month":"2024-03","nvd_published_cves":3309},
-    {"month":"2024-04","nvd_published_cves":3621},
-    {"month":"2024-05","nvd_published_cves":4999},
-    {"month":"2024-06","nvd_published_cves":3078},
-    {"month":"2024-07","nvd_published_cves":3113},
-    {"month":"2024-08","nvd_published_cves":2896},
-    {"month":"2024-09","nvd_published_cves":2514},
-    {"month":"2024-10","nvd_published_cves":3565},
-    {"month":"2024-11","nvd_published_cves":4056},
-    {"month":"2024-12","nvd_published_cves":3431},
-    {"month":"2025-01","nvd_published_cves":4275},
-    {"month":"2025-02","nvd_published_cves":3673},
-    {"month":"2025-03","nvd_published_cves":3999},
-    {"month":"2025-04","nvd_published_cves":4034},
-    {"month":"2025-05","nvd_published_cves":3980},
-    {"month":"2025-06","nvd_published_cves":3681},
-    {"month":"2025-07","nvd_published_cves":3776},
-    {"month":"2025-08","nvd_published_cves":3628},
-    {"month":"2025-09","nvd_published_cves":4321},
-    {"month":"2025-10","nvd_published_cves":4273},
-    {"month":"2025-11","nvd_published_cves":3021},
-    {"month":"2025-12","nvd_published_cves":5493},
-    {"month":"2026-01","nvd_published_cves":4305},
-    {"month":"2026-02","nvd_published_cves":4616},
-    {"month":"2026-03","nvd_published_cves":6234},
-    {"month":"2026-04","nvd_published_cves":5810},
-    {"month":"2026-05","nvd_published_cves":6939},
-    {"month":"2026-06","nvd_published_cves":7943},
-    {"month":"2026-07","nvd_published_cves":9770},
-    {"month":"2026-08","nvd_published_cves":11775}
+    {
+      "month": "2021-09",
+      "nvd_published_cves": 1902
+    },
+    {
+      "month": "2021-10",
+      "nvd_published_cves": 1701
+    },
+    {
+      "month": "2021-11",
+      "nvd_published_cves": 1508
+    },
+    {
+      "month": "2021-12",
+      "nvd_published_cves": 1942
+    },
+    {
+      "month": "2022-01",
+      "nvd_published_cves": 2016
+    },
+    {
+      "month": "2022-02",
+      "nvd_published_cves": 1942
+    },
+    {
+      "month": "2022-03",
+      "nvd_published_cves": 2058
+    },
+    {
+      "month": "2022-04",
+      "nvd_published_cves": 2046
+    },
+    {
+      "month": "2022-05",
+      "nvd_published_cves": 2021
+    },
+    {
+      "month": "2022-06",
+      "nvd_published_cves": 2280
+    },
+    {
+      "month": "2022-07",
+      "nvd_published_cves": 1969
+    },
+    {
+      "month": "2022-08",
+      "nvd_published_cves": 2317
+    },
+    {
+      "month": "2022-09",
+      "nvd_published_cves": 2197
+    },
+    {
+      "month": "2022-10",
+      "nvd_published_cves": 1849
+    },
+    {
+      "month": "2022-11",
+      "nvd_published_cves": 1958
+    },
+    {
+      "month": "2022-12",
+      "nvd_published_cves": 2421
+    },
+    {
+      "month": "2023-01",
+      "nvd_published_cves": 2337
+    },
+    {
+      "month": "2023-02",
+      "nvd_published_cves": 2122
+    },
+    {
+      "month": "2023-03",
+      "nvd_published_cves": 2516
+    },
+    {
+      "month": "2023-04",
+      "nvd_published_cves": 2330
+    },
+    {
+      "month": "2023-05",
+      "nvd_published_cves": 2418
+    },
+    {
+      "month": "2023-06",
+      "nvd_published_cves": 2384
+    },
+    {
+      "month": "2023-07",
+      "nvd_published_cves": 2305
+    },
+    {
+      "month": "2023-08",
+      "nvd_published_cves": 2477
+    },
+    {
+      "month": "2023-09",
+      "nvd_published_cves": 2148
+    },
+    {
+      "month": "2023-10",
+      "nvd_published_cves": 2680
+    },
+    {
+      "month": "2023-11",
+      "nvd_published_cves": 2449
+    },
+    {
+      "month": "2023-12",
+      "nvd_published_cves": 2650
+    },
+    {
+      "month": "2024-01",
+      "nvd_published_cves": 2594
+    },
+    {
+      "month": "2024-02",
+      "nvd_published_cves": 2778
+    },
+    {
+      "month": "2024-03",
+      "nvd_published_cves": 3309
+    },
+    {
+      "month": "2024-04",
+      "nvd_published_cves": 3621
+    },
+    {
+      "month": "2024-05",
+      "nvd_published_cves": 4999
+    },
+    {
+      "month": "2024-06",
+      "nvd_published_cves": 3078
+    },
+    {
+      "month": "2024-07",
+      "nvd_published_cves": 3113
+    },
+    {
+      "month": "2024-08",
+      "nvd_published_cves": 2896
+    },
+    {
+      "month": "2024-09",
+      "nvd_published_cves": 2514
+    },
+    {
+      "month": "2024-10",
+      "nvd_published_cves": 3565
+    },
+    {
+      "month": "2024-11",
+      "nvd_published_cves": 4056
+    },
+    {
+      "month": "2024-12",
+      "nvd_published_cves": 3431
+    },
+    {
+      "month": "2025-01",
+      "nvd_published_cves": 4275
+    },
+    {
+      "month": "2025-02",
+      "nvd_published_cves": 3673
+    },
+    {
+      "month": "2025-03",
+      "nvd_published_cves": 3999
+    },
+    {
+      "month": "2025-04",
+      "nvd_published_cves": 4034
+    },
+    {
+      "month": "2025-05",
+      "nvd_published_cves": 3980
+    },
+    {
+      "month": "2025-06",
+      "nvd_published_cves": 3681
+    },
+    {
+      "month": "2025-07",
+      "nvd_published_cves": 3776
+    },
+    {
+      "month": "2025-08",
+      "nvd_published_cves": 3628
+    },
+    {
+      "month": "2025-09",
+      "nvd_published_cves": 4321
+    },
+    {
+      "month": "2025-10",
+      "nvd_published_cves": 4273
+    },
+    {
+      "month": "2025-11",
+      "nvd_published_cves": 3021
+    },
+    {
+      "month": "2025-12",
+      "nvd_published_cves": 5493
+    },
+    {
+      "month": "2026-01",
+      "nvd_published_cves": 4305
+    },
+    {
+      "month": "2026-02",
+      "nvd_published_cves": 4616
+    },
+    {
+      "month": "2026-03",
+      "nvd_published_cves": 6234
+    },
+    {
+      "month": "2026-04",
+      "nvd_published_cves": 5810
+    },
+    {
+      "month": "2026-05",
+      "nvd_published_cves": 6939
+    },
+    {
+      "month": "2026-06",
+      "nvd_published_cves": 7943
+    },
+    {
+      "month": "2026-07",
+      "nvd_published_cves": 9770
+    },
+    {
+      "month": "2026-08",
+      "nvd_published_cves": 11776
+    }
   ],
   "annual": [
-    {"year":2022,"nvd_published_cves":25074,"partial_year":false},
-    {"year":2023,"nvd_published_cves":28816,"partial_year":false},
-    {"year":2024,"nvd_published_cves":39954,"partial_year":false},
-    {"year":2025,"nvd_published_cves":48154,"partial_year":false},
-    {"year":2026,"nvd_published_cves":57392,"partial_year":true}
+    {
+      "year": 2022,
+      "nvd_published_cves": 25074,
+      "partial_year": false
+    },
+    {
+      "year": 2023,
+      "nvd_published_cves": 28816,
+      "partial_year": false
+    },
+    {
+      "year": 2024,
+      "nvd_published_cves": 39954,
+      "partial_year": false
+    },
+    {
+      "year": 2025,
+      "nvd_published_cves": 48154,
+      "partial_year": false
+    },
+    {
+      "year": 2026,
+      "nvd_published_cves": 57393,
+      "partial_year": true
+    }
   ]
 }
