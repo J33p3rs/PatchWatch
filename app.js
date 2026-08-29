@@ -42,6 +42,44 @@ const VENDORS = {
       "This is disclosure volume, not a claim that every Fortinet CVE belongs to a Patch-Tuesday-style release. Fortinet's historical advisory cadence changed and critical or actively exploited vulnerabilities can be released out of cycle.",
     ],
   },
+  ios: {
+    label: "iOS",
+    dataUrl: "data/ios.json",
+    valueKey: "ios_security_cves",
+    includeInAll: true,
+    eyebrow: "Apple iOS security releases",
+    lede: "Unique CVEs documented across Apple's iOS security advisories released each calendar month.",
+    latestTitle: "Latest month",
+    latestNote: "iOS security CVEs",
+    valueDescription: "iOS security CVEs",
+    monthlyAria: "Bar chart of monthly unique CVEs documented in Apple iOS security advisories",
+    annualAria: "Bar chart of annual iOS security advisory CVE totals",
+    averageSuffix: "unique iOS security CVEs per month across this window.",
+    strongText: "unique CVE IDs",
+    method: [
+      "Patch Watch counts unique CVE IDs documented across Apple security advisories for iOS releases in each calendar month. Combined iOS/iPadOS advisories are included because that is Apple's normal iOS advisory format.",
+      "Multiple supported iOS release branches in the same month are unioned by CVE ID, so a vulnerability repeated across branches is counted once within the iOS series. Standalone iPadOS-only releases are not included.",
+    ],
+  },
+  macos: {
+    label: "macOS",
+    dataUrl: "data/macos.json",
+    valueKey: "macos_security_cves",
+    includeInAll: true,
+    eyebrow: "Apple macOS security releases",
+    lede: "Unique CVEs documented across Apple's macOS security advisories released each calendar month.",
+    latestTitle: "Latest month",
+    latestNote: "macOS security CVEs",
+    valueDescription: "macOS security CVEs",
+    monthlyAria: "Bar chart of monthly unique CVEs documented in Apple macOS security advisories",
+    annualAria: "Bar chart of annual macOS security advisory CVE totals",
+    averageSuffix: "unique macOS security CVEs per month across this window.",
+    strongText: "unique CVE IDs",
+    method: [
+      "Patch Watch counts unique CVE IDs documented across all Apple macOS security advisories released in each calendar month.",
+      "When Apple releases fixes for several supported macOS branches at the same time, CVE IDs are unioned across those branches so the same vulnerability is counted once within the macOS series.",
+    ],
+  },
 };
 
 const ALL_VIEW = {
@@ -57,7 +95,7 @@ const ALL_VIEW = {
   strongText: "existing Patch Watch headline metric",
   method: [
     "The All vendors view sums each vendor's existing Patch Watch headline metric for months where every included vendor has data.",
-    "The total is an operational comparison measure, not a count of globally unique CVEs and not a claim that each vendor uses the same disclosure or patch-release process. Adding a future vendor to the configured dataset automatically adds it to this view unless it is explicitly excluded.",
+    "The total is an operational comparison measure, not a count of globally unique CVEs and not a claim that each vendor uses the same disclosure or patch-release process. iOS and macOS are intentionally separate platform series, so a CVE affecting both can contribute to both platform totals. Adding a future vendor to the configured dataset automatically adds it to this view unless it is explicitly excluded.",
   ],
 };
 
