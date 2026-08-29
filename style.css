@@ -59,6 +59,36 @@
   --error-text: #ffb5bd;
 }
 
+:root[data-theme="patchwatch90"] {
+  color-scheme: dark;
+  font-family: "Courier New", Courier, monospace;
+  --page-top: #000033;
+  --page-bottom: #000000;
+  --text: #00ffff;
+  --heading: #ffff00;
+  --muted: #00ff00;
+  --subtle: #c0c0c0;
+  --eyebrow: #ff00ff;
+  --card-bg: #000066;
+  --card-border: #00ffff;
+  --card-shadow: rgba(255, 0, 255, 0.45);
+  --accent: #00ff00;
+  --accent-strong: #ffff00;
+  --accent-number: #ff00ff;
+  --partial: #00ffff;
+  --grid: #333399;
+  --axis: #00ffff;
+  --value: #ffff00;
+  --footer: #c0c0c0;
+  --toggle-bg: #c0c0c0;
+  --toggle-border: #ffffff;
+  --selector-bg: #000000;
+  --selector-active: #ffff00;
+  --selector-active-text: #000000;
+  --error-bg: #660000;
+  --error-text: #ffffff;
+}
+
 * { box-sizing: border-box; }
 
 body {
@@ -94,33 +124,34 @@ a:hover, a:focus-visible { color: var(--accent-strong); }
 }
 .hero-topline .eyebrow { margin-bottom: 0; }
 
-.theme-toggle,
+.theme-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--text);
+}
+.theme-control-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.theme-control select {
+  font: inherit;
+  font-weight: 700;
+  border: 1px solid var(--toggle-border);
+  border-radius: 999px;
+  padding: 8px 32px 8px 12px;
+  background: var(--toggle-bg);
+  color: var(--text);
+  cursor: pointer;
+}
+.theme-control select:focus-visible,
+.vendor-button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  outline-offset: 2px;
+}
+
 .vendor-button {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
-}
-
-.theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid var(--toggle-border);
-  border-radius: 999px;
-  padding: 8px 12px;
-  background: var(--toggle-bg);
-  color: var(--text);
-  font-size: 0.84rem;
-  transition: border-color 120ms ease, background-color 120ms ease, transform 120ms ease;
-}
-.theme-toggle:hover { border-color: var(--accent); }
-.theme-toggle:active { transform: translateY(1px); }
-.theme-toggle-icon { font-size: 1rem; line-height: 1; }
-
-.theme-toggle:focus-visible,
-.vendor-button:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
-  outline-offset: 2px;
 }
 
 .vendor-selector {
@@ -265,12 +296,138 @@ footer p { margin-bottom: 0; }
 }
 .noscript { width: min(1180px, calc(100% - 32px)); margin: 16px auto; }
 
+.retro-only { display: none; }
+
+:root[data-theme="patchwatch90"] body {
+  background-color: #000000;
+  background-image:
+    linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 0, 255, 0.04) 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+
+:root[data-theme="patchwatch90"] .retro-only { display: flex; }
+:root[data-theme="patchwatch90"] .shell { padding-top: 18px; }
+:root[data-theme="patchwatch90"] h1 {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  text-shadow: 3px 3px 0 #ff00ff, 6px 6px 0 #000000;
+}
+:root[data-theme="patchwatch90"] h2 { text-transform: uppercase; letter-spacing: 0.04em; }
+:root[data-theme="patchwatch90"] .latest-card,
+:root[data-theme="patchwatch90"] .chart-card,
+:root[data-theme="patchwatch90"] .method-card {
+  border: 3px ridge #c0c0c0;
+  border-radius: 0;
+  box-shadow: 7px 7px 0 #ff00ff;
+}
+:root[data-theme="patchwatch90"] .theme-control select,
+:root[data-theme="patchwatch90"] .vendor-selector {
+  border: 3px outset #c0c0c0;
+  border-radius: 0;
+}
+:root[data-theme="patchwatch90"] .theme-control select {
+  background: #c0c0c0;
+  color: #000000;
+}
+:root[data-theme="patchwatch90"] .vendor-button { border-radius: 0; }
+:root[data-theme="patchwatch90"] .bar { rx: 0; }
+:root[data-theme="patchwatch90"] .grid-line { stroke-dasharray: 3 3; }
+
+.retro-marquee {
+  overflow: hidden;
+  margin-bottom: 14px;
+  border: 3px outset #c0c0c0;
+  background: #000000;
+  color: #ffff00;
+  white-space: nowrap;
+}
+.retro-marquee span {
+  display: inline-block;
+  min-width: 100%;
+  padding: 6px 0;
+  font-weight: 700;
+  text-align: center;
+  animation: retro-scroll 10s linear infinite;
+}
+.retro-status {
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 12px;
+  color: #00ff00;
+  font-weight: 700;
+}
+.retro-live {
+  display: inline-block;
+  padding: 3px 7px;
+  border: 2px outset #ffffff;
+  background: #ff0000;
+  color: #ffffff;
+  animation: retro-blink 0.75s steps(1, end) infinite;
+}
+.retro-counter {
+  margin-top: 18px;
+  flex-direction: column;
+  gap: 4px;
+  color: #00ff00;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.retro-counter output {
+  width: fit-content;
+  padding: 4px 6px;
+  border: 3px inset #c0c0c0;
+  background: #000000;
+  color: #ff0000;
+  font-family: "Courier New", monospace;
+  font-size: 1.15rem;
+  letter-spacing: 0.12em;
+}
+.retro-webring {
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 10px 12px;
+  border: 3px ridge #c0c0c0;
+  background: #000066;
+  color: #00ffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+}
+.retro-footer-copy {
+  flex-direction: column;
+  align-items: flex-end;
+  color: #ffff00;
+  text-align: right;
+}
+.retro-footnote { color: #c0c0c0; font-size: 0.68rem; }
+
+@keyframes retro-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@keyframes retro-scroll {
+  from { transform: translateX(100%); }
+  to { transform: translateX(-100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .retro-live,
+  .retro-marquee span { animation: none; }
+}
+
 @media (max-width: 760px) {
   .shell { padding-top: 28px; }
   .hero { grid-template-columns: 1fr; }
-  .hero-topline { align-items: flex-start; }
+  .hero-topline { align-items: flex-start; flex-direction: column; }
   .latest-card { min-height: auto; }
   .section-heading, footer { align-items: flex-start; flex-direction: column; }
   .section-note { text-align: left; }
   .chart-card, .method-card { padding: 18px; }
+  .retro-webring { flex-direction: column; }
+  .retro-footer-copy { align-items: flex-start; text-align: left; }
 }
