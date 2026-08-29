@@ -80,6 +80,25 @@ const VENDORS = {
       "When Apple releases fixes for several supported macOS branches at the same time, CVE IDs are unioned across those branches so the same vulnerability is counted once within the macOS series.",
     ],
   },
+  chrome: {
+    label: "Chrome",
+    dataUrl: "data/chrome.json",
+    valueKey: "chrome_release_cves",
+    includeInAll: true,
+    eyebrow: "Google Chrome Desktop Stable",
+    lede: "Unique public Chrome CNA CVEs first referenced by Desktop Stable releases each calendar month.",
+    latestTitle: "Latest month",
+    latestNote: "Chrome release CVEs",
+    valueDescription: "Chrome release CVEs",
+    monthlyAria: "Bar chart of monthly unique Chrome CNA CVEs referenced by Desktop Stable releases",
+    annualAria: "Bar chart of annual Chrome Desktop Stable release CVE totals",
+    averageSuffix: "Chrome release CVEs per month across this window.",
+    strongText: "Desktop Stable release",
+    method: [
+      "Patch Watch counts unique Chrome CNA CVEs by their first referenced Google Chrome Desktop Stable release. The YYYY/MM path in the original Chrome Releases URL defines the release month.",
+      "This avoids historical CVE List migration timestamps. It counts public Chrome CVEs, not Google's broader security-fix total; a CVE repeated in later Desktop Stable references is attributed only to its earliest release month.",
+    ],
+  },
 };
 
 const ALL_VIEW = {
