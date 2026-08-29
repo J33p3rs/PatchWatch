@@ -1,6 +1,6 @@
 # Patch Watch
 
-A lightweight visualisation of vendor/platform vulnerability disclosure volume plus a separate global NVD view.
+A lightweight visualisation of vendor/platform vulnerability disclosure volume plus separate global NVD and CISA KEV views.
 
 Patch Watch currently includes a vendor/platform dashboard with:
 
@@ -14,11 +14,16 @@ Patch Watch currently includes a vendor/platform dashboard with:
 
 Horizontally scrollable charts open at their **most recent/right-most data** on first render while retaining normal scrolling back through older history.
 
-Patch Watch also includes a separate **NVD global** page showing non-rejected CVEs published into the National Vulnerability Database per calendar month.
+Patch Watch also includes two separate global views:
 
-The NVD page includes a **Vendor vs global** line graph. It compares the selected vendor/platform with NVD using 12-month rolling averages indexed to 100 at the first common comparison point. This is a relative-trend comparison rather than a misleading raw dual-axis comparison between very different scales and metrics.
+- **NVD global** — non-rejected CVEs published into the National Vulnerability Database per calendar month; and
+- **CISA KEV** — CVEs added to CISA's Known Exploited Vulnerabilities catalogue per calendar month, grouped by `dateAdded`.
 
-NVD is intentionally **excluded from All** because it is an ecosystem-wide index containing CVEs already represented in the vendor/platform feeds. Adding it to All would double-count extensively.
+Both global pages include a vendor comparison line graph using 12-month rolling averages indexed to 100. This compares relative direction and growth rather than plotting misleading raw-count dual axes between different metrics and scales.
+
+The KEV comparison begins with the rolling window ending November 2022 so CISA's one-off November 2021 initial catalogue seed does not distort the comparison baseline.
+
+NVD and KEV are intentionally **excluded from All** because they are ecosystem-wide/global datasets containing CVEs already represented in the vendor/platform feeds. Adding either to All would double-count extensively and mix different measurement semantics.
 
 For iOS and macOS, CVEs repeated across multiple supported release branches in the same platform/month are counted once within that platform. iOS and macOS remain separate series, so a CVE affecting both platforms can contribute to both headline totals and therefore to the All view.
 
