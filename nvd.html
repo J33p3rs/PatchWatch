@@ -3,28 +3,28 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Patch Watch visualises vendor vulnerability disclosure volume over time.">
+  <meta name="description" content="Patch Watch NVD global vulnerability publication trends.">
   <meta name="referrer" content="no-referrer">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <title>Patch Watch</title>
+  <title>Patch Watch — NVD</title>
   <link rel="stylesheet" href="style.css">
-  <script src="app.js" defer></script>
+  <script src="nvd.js" defer></script>
 </head>
 <body>
   <main class="shell">
     <nav class="site-nav" aria-label="Patch Watch sections">
-      <a href="index.html" aria-current="page">Vendor dashboard</a>
-      <a href="nvd.html">NVD global</a>
+      <a href="index.html">Vendor dashboard</a>
+      <a href="nvd.html" aria-current="page">NVD global</a>
     </nav>
 
     <div class="retro-only retro-marquee" aria-hidden="true">
-      <span>*** PATCHWATCH 90 *** VULNERABILITY DATA ON THE INFORMATION SUPERHIGHWAY ***</span>
+      <span>*** PATCHWATCH 90 *** GLOBAL VULNERABILITY LANDSCAPE *** NVD ONLINE ***</span>
     </div>
 
     <header class="hero">
       <div>
         <div class="hero-topline">
-          <p id="vendor-eyebrow" class="eyebrow">All tracked vendors</p>
+          <p class="eyebrow">Global vulnerability landscape</p>
           <label class="theme-control" for="theme-select">
             <span class="theme-control-label">Display</span>
             <select id="theme-select" aria-label="Select display theme">
@@ -36,28 +36,24 @@
         </div>
         <div class="retro-only retro-status" aria-hidden="true">
           <span class="retro-live">LIVE!</span>
-          <span>NOW WITH MULTI-VENDOR CYBER DATA</span>
+          <span>NATIONAL VULNERABILITY DATABASE FEED</span>
         </div>
-        <h1>Patch Watch</h1>
-        <p id="vendor-lede" class="lede">Combined headline vulnerability counts across every vendor currently tracked by Patch Watch.</p>
-        <div id="vendor-selector" class="vendor-selector" role="group" aria-label="Select vendor view"></div>
+        <h1>NVD Watch</h1>
+        <p class="lede">Non-rejected CVEs published into the National Vulnerability Database, tracked month by month as a separate global series.</p>
+        <p class="view-boundary-note"><strong>Not included in All:</strong> NVD contains vulnerabilities already represented in vendor/platform feeds, so adding it to the All total would double-count extensively.</p>
       </div>
       <section class="latest-card" aria-labelledby="latest-title">
-        <p id="latest-title" class="card-label">Latest common month</p>
+        <p id="latest-title" class="card-label">Latest month</p>
         <p id="latest-month" class="latest-month">—</p>
         <p id="latest-count" class="latest-count">—</p>
-        <p id="latest-note" class="card-note">combined tracked-vendor count</p>
-        <div class="retro-only retro-counter" aria-label="Local visit counter">
-          <span>YOUR VISITS</span>
-          <output id="retro-visit-count">000001</output>
-        </div>
+        <p class="card-note">NVD published CVEs</p>
       </section>
     </header>
 
     <section class="chart-card" aria-labelledby="monthly-heading">
       <div class="section-heading">
         <div>
-          <p id="monthly-window-label" class="eyebrow">60 common months</p>
+          <p id="monthly-window-label" class="eyebrow">60 months</p>
           <h2 id="monthly-heading">Month by month</h2>
         </div>
         <p id="monthly-summary" class="section-note"></p>
@@ -71,34 +67,32 @@
           <p id="annual-window-label" class="eyebrow">Five calendar years</p>
           <h2 id="annual-heading">Year by year</h2>
         </div>
-        <p id="annual-note" class="section-note">2026 is year-to-date through August.</p>
+        <p id="annual-note" class="section-note"></p>
       </div>
       <div id="annual-chart" class="chart-wrap annual" aria-live="polite"></div>
     </section>
 
     <section class="method-card" aria-labelledby="method-heading">
       <h2 id="method-heading">What the number means</h2>
-      <div id="method-copy">
-        <p>The All vendors view sums each vendor's existing Patch Watch headline metric for months where every included vendor has data.</p>
-        <p>The total is an operational comparison measure, not a count of globally unique CVEs and not a claim that each vendor uses the same disclosure or patch-release process.</p>
-      </div>
+      <p>Patch Watch queries the NVD CVE API 2.0 for each calendar month and counts records returned by publication date with rejected CVEs excluded.</p>
+      <p>This is a <strong>global vulnerability publication measure</strong>, not a vendor patch count. NVD is deliberately isolated from the vendor/platform All calculation because the same CVEs can already appear in Microsoft, Fortinet, Apple, Chrome and future platform feeds.</p>
+      <p>Future NVD-specific enrichment can add severity, CVSS, CISA KEV overlap and CWE trends without changing the vendor dashboard's aggregation model.</p>
     </section>
 
     <div class="retro-only retro-webring" aria-hidden="true">
-      <span>← PREVIOUS CYBER SITE</span>
-      <span>PATCHWATCH WEBRING</span>
-      <span>NEXT CYBER SITE →</span>
+      <span>← VENDOR DASHBOARD</span>
+      <span>PATCHWATCH GLOBAL ZONE</span>
+      <span>NVD DATA →</span>
     </div>
 
     <footer>
       <div>
         <p>Data last generated <time id="generated-date">—</time>.</p>
-        <p>Patch Watch is an experimental visualisation project.</p>
+        <p>Source: National Vulnerability Database CVE API 2.0.</p>
       </div>
       <div class="retro-only retro-footer-copy">
         <p>BEST VIEWED AT 800×600</p>
-        <p>NETSCAPE NAVIGATOR 4.0 COMPATIBLE*</p>
-        <p class="retro-footnote">*probably</p>
+        <p>CYBERSPACE NEVER SLEEPS</p>
       </div>
     </footer>
   </main>

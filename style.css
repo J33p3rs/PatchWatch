@@ -107,6 +107,29 @@ a:hover, a:focus-visible { color: var(--accent-strong); }
   padding: 48px 0 32px;
 }
 
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+.site-nav a {
+  padding: 8px 12px;
+  border: 1px solid var(--toggle-border);
+  border-radius: 999px;
+  background: var(--selector-bg);
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+.site-nav a:hover,
+.site-nav a:focus-visible { color: var(--heading); }
+.site-nav a[aria-current="page"] {
+  background: var(--selector-active);
+  color: var(--selector-active-text);
+}
+
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
@@ -143,7 +166,8 @@ a:hover, a:focus-visible { color: var(--accent-strong); }
   cursor: pointer;
 }
 .theme-control select:focus-visible,
-.vendor-button:focus-visible {
+.vendor-button:focus-visible,
+.site-nav a:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
   outline-offset: 2px;
 }
@@ -212,6 +236,16 @@ h2 {
   font-size: clamp(1.05rem, 1.8vw, 1.3rem);
   line-height: 1.6;
   color: var(--muted);
+}
+
+.view-boundary-note {
+  max-width: 760px;
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  border-left: 4px solid var(--accent);
+  background: var(--selector-bg);
+  color: var(--muted);
+  line-height: 1.55;
 }
 
 .latest-card, .chart-card, .method-card {
@@ -326,7 +360,8 @@ footer p { margin-bottom: 0; }
   box-shadow: 7px 7px 0 #ff00ff;
 }
 :root[data-theme="patchwatch90"] .theme-control select,
-:root[data-theme="patchwatch90"] .vendor-selector {
+:root[data-theme="patchwatch90"] .vendor-selector,
+:root[data-theme="patchwatch90"] .site-nav a {
   border: 3px outset #c0c0c0;
   border-radius: 0;
 }
@@ -337,6 +372,11 @@ footer p { margin-bottom: 0; }
 :root[data-theme="patchwatch90"] .vendor-button { border-radius: 0; }
 :root[data-theme="patchwatch90"] .bar { rx: 0; }
 :root[data-theme="patchwatch90"] .grid-line { stroke-dasharray: 3 3; }
+:root[data-theme="patchwatch90"] .view-boundary-note {
+  border: 3px ridge #c0c0c0;
+  background: #000000;
+  color: #00ff00;
+}
 
 .retro-marquee {
   overflow: hidden;
