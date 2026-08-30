@@ -5,7 +5,7 @@
     "source_branch": "develop",
     "catalog_version": "2026.08.27",
     "catalog_date_released": "2026-08-27T17:00:36.6632Z",
-    "generated": "2026-08-29",
+    "generated": "2026-08-30",
     "metric": "CVEs added to CISA KEV per calendar month, grouped by dateAdded",
     "coverage_start": "2021-11",
     "coverage_end": "2026-08",

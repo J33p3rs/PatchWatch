@@ -1,0 +1,28 @@
+.chart-selection {
+  margin: -4px 0 12px;
+  padding: 10px 12px;
+  border-left: 4px solid var(--accent);
+  background: var(--selector-bg);
+  color: var(--text);
+  font-weight: 750;
+}
+
+.bar { cursor: pointer; }
+.bar.bar-selected {
+  fill: var(--accent-strong);
+  opacity: 1;
+  stroke: var(--heading);
+  stroke-width: 2;
+}
+
+.bar[role="button"]:focus-visible {
+  outline: none;
+  stroke: var(--heading);
+  stroke-width: 3;
+}
+
+:root[data-theme="patchwatch90"] .chart-selection {
+  border: 3px ridge #c0c0c0;
+  background: #000000;
+  color: #ffff00;
+}
