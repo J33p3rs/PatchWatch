@@ -13,6 +13,7 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: patchwatch-production
 
     steps:
       - name: Validate GitHub App configuration
@@ -46,11 +47,12 @@ jobs:
           permission-actions: read
           permission-contents: read
 
-      - name: Resolve latest validated private source commit
+      - name: Resolve and verify latest validated private source commit
         id: source
         shell: bash
         env:
           GH_TOKEN: ${{ steps.source-token.outputs.token }}
+          TRUSTED_SECURITY_WORKFLOW_BLOB_SHA: 875701b614565f49d45527bef5cdcb91a2e13d93
         run: |
           set -euo pipefail
 
@@ -71,8 +73,27 @@ jobs:
             exit 1
           fi
 
+          ancestry_status="$(
+            gh api "/repos/J33p3rs/ai-learning-challenge/compare/${source_sha}...${main_sha}" --jq '.status'
+          )"
+          if [[ "$ancestry_status" != "ahead" && "$ancestry_status" != "identical" ]]; then
+            echo "Validated source is not an ancestor of current private main (status: $ancestry_status)."
+            exit 1
+          fi
+
+          validator_blob_sha="$(
+            gh api "/repos/J33p3rs/ai-learning-challenge/contents/.github/workflows/patchwatch-security.yml?ref=${source_sha}" --jq '.sha // empty'
+          )"
+          if [[ "$validator_blob_sha" != "$TRUSTED_SECURITY_WORKFLOW_BLOB_SHA" ]]; then
+            echo "Candidate source used an untrusted Patch Watch security workflow definition."
+            echo "Expected validator blob: $TRUSTED_SECURITY_WORKFLOW_BLOB_SHA"
+            echo "Candidate validator blob: $validator_blob_sha"
+            exit 1
+          fi
+
           echo "Validated private source: $source_sha"
           echo "Current private main:      $main_sha"
+          echo "Trusted validator blob:    $validator_blob_sha"
           echo "sha=$source_sha" >> "$GITHUB_OUTPUT"
 
       - name: Check out validated private source
@@ -159,7 +180,7 @@ jobs:
           token: ${{ steps.publisher-token.outputs.token }}
           path: public-repo
           persist-credentials: true
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Refuse source rollback and verify current site-file boundary
         shell: bash
@@ -169,19 +190,27 @@ jobs:
         run: |
           set -euo pipefail
 
-          current_message="$(git -C public-repo log -1 --pretty=%B)"
-          if [[ "$current_message" =~ Publish\ Patch\ Watch\ from\ ([0-9a-f]{40}) ]]; then
+          current_message="$(
+            git -C public-repo log \
+              --extended-regexp \
+              --grep='^Publish Patch Watch from [0-9a-f]{40}$' \
+              -n 1 \
+              --pretty=%s
+          )"
+
+          if [[ "$current_message" =~ ^Publish\ Patch\ Watch\ from\ ([0-9a-f]{40})$ ]]; then
             current_source="${BASH_REMATCH[1]}"
             status="$(
               gh api "/repos/J33p3rs/ai-learning-challenge/compare/${current_source}...${SOURCE_SHA}" \
                 --jq '.status'
             )"
             if [[ "$status" != "ahead" && "$status" != "identical" ]]; then
-              echo "Candidate source would not move safely forward from the currently published source (status: $status)."
+              echo "Candidate source would not move safely forward from the most recently published source (status: $status)."
               exit 1
             fi
           else
-            echo "Latest public commit has no recognised source-SHA marker; continuing initial migration validation."
+            echo "No recognised publication source marker exists in public history; refusing ambiguous migration baseline."
+            exit 1
           fi
 
           find public-repo \
