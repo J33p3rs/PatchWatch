@@ -59,7 +59,7 @@ jobs:
 
           source_sha="$(
             gh api \
-              '/repos/J33p3rs/ai-learning-challenge/actions/workflows/patchwatch-security.yml/runs?branch=main&event=push&status=success&per_page=1' \
+              '/repos/J33p3rs/ai-learning-challenge/actions/workflows/patchwatch-security.yml/runs?branch=main&status=success&per_page=1' \
               --jq '.workflow_runs[0].head_sha // empty'
           )"
           [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]] || { echo "Could not resolve latest successful Patch Watch source SHA."; exit 1; }
