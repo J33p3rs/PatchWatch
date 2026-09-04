@@ -223,6 +223,7 @@ jobs:
           )"
 
           reviewed=false
+          short_sha="${SOURCE_SHA:0:10}"
           while IFS= read -r pr; do
             [[ "$pr" =~ ^[0-9]+$ ]] || continue
             base_sha="$(gh api "/repos/J33p3rs/ai-learning-challenge/pulls/${pr}" --jq '.base.sha')"
@@ -235,6 +236,17 @@ jobs:
             )"
             if [[ "$evidence" =~ ^[0-9]+$ ]]; then
               echo "Codex review evidence found on release-review PR #${pr} for ${SOURCE_SHA}."
+              reviewed=true
+              break
+            fi
+
+            clean_comment_id="$(
+              gh api "/repos/J33p3rs/ai-learning-challenge/issues/${pr}/comments?per_page=100" \
+                --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and (.body | startswith(\"Codex Review: Didn't find any major issues.\")) and (.body | contains(\"**Reviewed commit:** \\\`${short_sha}\\\`\"))) | .id" |
+                tail -n 1
+            )"
+            if [[ "$clean_comment_id" =~ ^[0-9]+$ ]]; then
+              echo "Clean Codex review comment evidence found on release-review PR #${pr} for ${SOURCE_SHA}."
               reviewed=true
               break
             fi
