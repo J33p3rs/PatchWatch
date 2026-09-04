@@ -97,6 +97,19 @@ jobs:
           persist-credentials: false
           fetch-depth: 1
 
+      - name: Verify committed Monthly Notes match source data
+        shell: bash
+        working-directory: source
+        run: |
+          set -euo pipefail
+          python PatchWatch/scripts/build_notes_index.py --backfill --latest
+          stale="$(git status --porcelain -- PatchWatch/data/notes.json PatchWatch/generated/notes PatchWatch/notes)"
+          if [[ -n "$stale" ]]; then
+            echo "Monthly Notes are missing or stale for this validated source; refusing publication."
+            echo "$stale"
+            exit 1
+          fi
+
       - name: Build and verify allow-listed public artifact
         shell: bash
         run: |
