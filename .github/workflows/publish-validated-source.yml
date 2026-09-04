@@ -217,45 +217,39 @@ jobs:
         run: |
           set -euo pipefail
 
-          pr_numbers="$(
-            gh api "/repos/J33p3rs/ai-learning-challenge/commits/${SOURCE_SHA}/pulls" \
-              --jq ".[] | select(.head.sha == \"${SOURCE_SHA}\") | .number"
+          release_pr="$(
+            gh api '/repos/J33p3rs/ai-learning-challenge/pulls?state=open&head=J33p3rs:patchwatch-release-review&per_page=10' \
+              --jq ".[] | select(.head.sha == \"${SOURCE_SHA}\" and .base.sha == \"${CURRENT_SOURCE}\") | .number" |
+              head -n 1
           )"
-
-          reviewed=false
-          short_sha="${SOURCE_SHA:0:10}"
-          while IFS= read -r pr; do
-            [[ "$pr" =~ ^[0-9]+$ ]] || continue
-            base_sha="$(gh api "/repos/J33p3rs/ai-learning-challenge/pulls/${pr}" --jq '.base.sha')"
-            [[ "$base_sha" == "$CURRENT_SOURCE" ]] || continue
-
-            evidence="$(
-              gh api "/repos/J33p3rs/ai-learning-challenge/pulls/${pr}/reviews" \
-                --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and .commit_id == \"${SOURCE_SHA}\") | .id" |
-                tail -n 1
-            )"
-            if [[ "$evidence" =~ ^[0-9]+$ ]]; then
-              echo "Codex review evidence found on release-review PR #${pr} for ${SOURCE_SHA}."
-              reviewed=true
-              break
-            fi
-
-            clean_comment_id="$(
-              gh api "/repos/J33p3rs/ai-learning-challenge/issues/${pr}/comments?per_page=100" \
-                --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and (.body | startswith(\"Codex Review: Didn't find any major issues.\")) and (.body | contains(\"**Reviewed commit:**\")) and (.body | contains(\"${short_sha}\"))) | .id" |
-                tail -n 1
-            )"
-            if [[ "$clean_comment_id" =~ ^[0-9]+$ ]]; then
-              echo "Clean Codex review comment evidence found on release-review PR #${pr} for ${SOURCE_SHA}."
-              reviewed=true
-              break
-            fi
-          done <<< "$pr_numbers"
-
-          if [[ "$reviewed" != true ]]; then
-            echo "Substantive Patch Watch changes require Codex review evidence tied to exact source ${SOURCE_SHA}."
+          [[ "$release_pr" =~ ^[0-9]+$ ]] || {
+            echo "No open Patch Watch release-review PR has exact head ${SOURCE_SHA} and production base ${CURRENT_SOURCE}."
             exit 1
+          }
+
+          evidence="$(
+            gh api "/repos/J33p3rs/ai-learning-challenge/pulls/${release_pr}/reviews" \
+              --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and .commit_id == \"${SOURCE_SHA}\") | .id" |
+              tail -n 1
+          )"
+          if [[ "$evidence" =~ ^[0-9]+$ ]]; then
+            echo "Codex review evidence found on release-review PR #${release_pr} for ${SOURCE_SHA}."
+            exit 0
           fi
+
+          short_sha="${SOURCE_SHA:0:10}"
+          clean_comment_id="$(
+            gh api "/repos/J33p3rs/ai-learning-challenge/issues/${release_pr}/comments?per_page=100" \
+              --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and (.body | startswith(\"Codex Review: Didn't find any major issues.\")) and (.body | contains(\"**Reviewed commit:**\")) and (.body | contains(\"${short_sha}\"))) | .id" |
+              tail -n 1
+          )"
+          if [[ "$clean_comment_id" =~ ^[0-9]+$ ]]; then
+            echo "Clean Codex review comment evidence found on release-review PR #${release_pr} for ${SOURCE_SHA}."
+            exit 0
+          fi
+
+          echo "Substantive Patch Watch changes require Codex review evidence tied to exact source ${SOURCE_SHA}."
+          exit 1
 
       - name: Verify current public site-file boundary
         shell: bash
