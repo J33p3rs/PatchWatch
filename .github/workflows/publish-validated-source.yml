@@ -1,0 +1,325 @@
+name: Patch Watch - Publish Validated Source
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: patchwatch-public-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: patchwatch-production
+
+    steps:
+      - name: Validate GitHub App configuration
+        shell: bash
+        env:
+          SOURCE_CLIENT_ID: ${{ vars.PATCHWATCH_SOURCE_READER_CLIENT_ID }}
+          SOURCE_PRIVATE_KEY: ${{ secrets.PATCHWATCH_SOURCE_READER_PRIVATE_KEY }}
+          PUBLISHER_CLIENT_ID: ${{ vars.PATCHWATCH_PUBLISHER_CLIENT_ID }}
+          PUBLISHER_PRIVATE_KEY: ${{ secrets.PATCHWATCH_PUBLISHER_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in SOURCE_CLIENT_ID SOURCE_PRIVATE_KEY PUBLISHER_CLIENT_ID PUBLISHER_PRIVATE_KEY; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "Missing required GitHub App configuration: $name"
+              missing=1
+            fi
+          done
+          test "$missing" -eq 0
+
+      - name: Create read-only source token
+        id: source-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.PATCHWATCH_SOURCE_READER_CLIENT_ID }}
+          private-key: ${{ secrets.PATCHWATCH_SOURCE_READER_PRIVATE_KEY }}
+          owner: J33p3rs
+          repositories: ai-learning-challenge
+          permission-actions: read
+          permission-contents: read
+          permission-pull-requests: read
+
+      - name: Resolve and verify latest validated private source commit
+        id: source
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
+          TRUSTED_SECURITY_WORKFLOW_BLOB_SHA: 875701b614565f49d45527bef5cdcb91a2e13d93
+        run: |
+          set -euo pipefail
+
+          source_sha="$(
+            gh api \
+              '/repos/J33p3rs/ai-learning-challenge/actions/workflows/patchwatch-security.yml/runs?branch=main&event=push&status=success&per_page=1' \
+              --jq '.workflow_runs[0].head_sha // empty'
+          )"
+          [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]] || { echo "Could not resolve latest successful Patch Watch source SHA."; exit 1; }
+
+          main_sha="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
+          [[ "$main_sha" =~ ^[0-9a-f]{40}$ ]] || { echo "Could not resolve private main SHA."; exit 1; }
+
+          ancestry_status="$(gh api "/repos/J33p3rs/ai-learning-challenge/compare/${source_sha}...${main_sha}" --jq '.status')"
+          if [[ "$ancestry_status" != "ahead" && "$ancestry_status" != "identical" ]]; then
+            echo "Validated source is not an ancestor of current private main (status: $ancestry_status)."
+            exit 1
+          fi
+
+          validator_blob_sha="$(
+            gh api "/repos/J33p3rs/ai-learning-challenge/contents/.github/workflows/patchwatch-security.yml?ref=${source_sha}" --jq '.sha // empty'
+          )"
+          if [[ "$validator_blob_sha" != "$TRUSTED_SECURITY_WORKFLOW_BLOB_SHA" ]]; then
+            echo "Candidate source used an untrusted Patch Watch security workflow definition."
+            echo "Expected: $TRUSTED_SECURITY_WORKFLOW_BLOB_SHA"
+            echo "Candidate: $validator_blob_sha"
+            exit 1
+          fi
+
+          echo "Validated private source: $source_sha"
+          echo "Current private main:      $main_sha"
+          echo "sha=$source_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Check out validated private source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: J33p3rs/ai-learning-challenge
+          ref: ${{ steps.source.outputs.sha }}
+          token: ${{ steps.source-token.outputs.token }}
+          path: source
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Build and verify allow-listed public artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p publish/data
+          for path in \
+            index.html nvd.html kev.html \
+            app.js nvd.js kev.js chart-scroll.js bar-selection.js \
+            style.css trend.css bar-selection.css \
+            data/patches.json data/fortinet.json data/ios.json data/macos.json \
+            data/chrome.json data/firefox.json data/nvd.json data/kev.json data/linux-kernel.json; do
+            mkdir -p "publish/$(dirname "$path")"
+            cp "source/PatchWatch/$path" "publish/$path"
+          done
+          cp source/PatchWatch/PUBLIC-README.md publish/README.md
+          cp source/PatchWatch/LICENSE publish/LICENSE
+
+          cat > expected-site-files.txt <<'EOF'
+          LICENSE
+          README.md
+          app.js
+          bar-selection.css
+          bar-selection.js
+          chart-scroll.js
+          data/chrome.json
+          data/firefox.json
+          data/fortinet.json
+          data/ios.json
+          data/kev.json
+          data/linux-kernel.json
+          data/macos.json
+          data/nvd.json
+          data/patches.json
+          index.html
+          kev.html
+          kev.js
+          nvd.html
+          nvd.js
+          style.css
+          trend.css
+          EOF
+
+          find publish -type f -printf '%P\n' | sort > actual-site-files.txt
+          sort -o expected-site-files.txt expected-site-files.txt
+          diff -u expected-site-files.txt actual-site-files.txt
+
+      - name: Create public-repository publisher token
+        id: publisher-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.PATCHWATCH_PUBLISHER_CLIENT_ID }}
+          private-key: ${{ secrets.PATCHWATCH_PUBLISHER_PRIVATE_KEY }}
+          owner: J33p3rs
+          repositories: PatchWatch
+          permission-contents: write
+
+      - name: Check out public repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: J33p3rs/PatchWatch
+          ref: main
+          token: ${{ steps.publisher-token.outputs.token }}
+          path: public-repo
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Verify forward-only source and classify changes
+        id: gate
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          set -euo pipefail
+
+          current_message="$(
+            git -C public-repo log --format=%s |
+              grep -m1 -E '^Publish Patch Watch from [0-9a-f]{40}$' || true
+          )"
+          if [[ ! "$current_message" =~ ^Publish\ Patch\ Watch\ from\ ([0-9a-f]{40})$ ]]; then
+            echo "No recognised publication source marker exists in public history."
+            exit 1
+          fi
+          current_source="${BASH_REMATCH[1]}"
+
+          status="$(gh api "/repos/J33p3rs/ai-learning-challenge/compare/${current_source}...${SOURCE_SHA}" --jq '.status')"
+          if [[ "$status" != "ahead" && "$status" != "identical" ]]; then
+            echo "Candidate would not move forward from current published source (status: $status)."
+            exit 1
+          fi
+
+          gh api "/repos/J33p3rs/ai-learning-challenge/compare/${current_source}...${SOURCE_SHA}" \
+            --jq '.files[].filename' > changed-files.txt
+
+          review_required=false
+          while IFS= read -r path; do
+            [[ -n "$path" ]] || continue
+            if [[ "$path" =~ ^PatchWatch/data/[^/]+\.json$ ]]; then
+              continue
+            fi
+            if [[ "$path" == PatchWatch/* || "$path" =~ ^\.github/workflows/patchwatch-.*\.yml$ ]]; then
+              review_required=true
+              echo "Codex review required due to: $path"
+            fi
+          done < changed-files.txt
+
+          echo "current_source=$current_source" >> "$GITHUB_OUTPUT"
+          echo "review_required=$review_required" >> "$GITHUB_OUTPUT"
+
+      - name: Require exact-source Codex review evidence for substantive changes
+        if: steps.gate.outputs.review_required == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          CURRENT_SOURCE: ${{ steps.gate.outputs.current_source }}
+        run: |
+          set -euo pipefail
+
+          pr_numbers="$(
+            gh api "/repos/J33p3rs/ai-learning-challenge/commits/${SOURCE_SHA}/pulls" \
+              --jq ".[] | select(.head.sha == \"${SOURCE_SHA}\") | .number"
+          )"
+
+          reviewed=false
+          while IFS= read -r pr; do
+            [[ "$pr" =~ ^[0-9]+$ ]] || continue
+            base_sha="$(gh api "/repos/J33p3rs/ai-learning-challenge/pulls/${pr}" --jq '.base.sha')"
+            [[ "$base_sha" == "$CURRENT_SOURCE" ]] || continue
+
+            evidence="$(
+              gh api "/repos/J33p3rs/ai-learning-challenge/pulls/${pr}/reviews" \
+                --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and .commit_id == \"${SOURCE_SHA}\") | .id" |
+                tail -n 1
+            )"
+            if [[ "$evidence" =~ ^[0-9]+$ ]]; then
+              echo "Codex review evidence found on release-review PR #${pr} for ${SOURCE_SHA}."
+              reviewed=true
+              break
+            fi
+          done <<< "$pr_numbers"
+
+          if [[ "$reviewed" != true ]]; then
+            echo "Substantive Patch Watch changes require Codex review evidence tied to exact source ${SOURCE_SHA}."
+            exit 1
+          fi
+
+      - name: Verify current public site-file boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git -C public-repo ls-files -s | while read -r mode object stage path; do
+            [[ "$path" == .github/* ]] && continue
+            if [[ "$mode" != "100644" && "$mode" != "100755" ]]; then
+              echo "Unexpected non-regular tracked entry: mode=$mode path=$path"
+              exit 1
+            fi
+            echo "$path"
+          done | sort > current-site-files.txt
+
+          unexpected="$(comm -23 current-site-files.txt expected-site-files.txt || true)"
+          if [[ -n "$unexpected" ]]; then
+            echo "Unexpected public site tracked entry/entries:"
+            echo "$unexpected"
+            exit 1
+          fi
+
+      - name: Promote validated site files
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r path; do
+            mkdir -p "public-repo/$(dirname "$path")"
+            cp "publish/$path" "public-repo/$path"
+          done < expected-site-files.txt
+
+          git -C public-repo ls-files -s | while read -r mode object stage path; do
+            [[ "$path" == .github/* ]] && continue
+            if [[ "$mode" != "100644" && "$mode" != "100755" ]]; then
+              echo "Unexpected non-regular tracked entry after promotion: mode=$mode path=$path"
+              exit 1
+            fi
+            echo "$path"
+          done | sort > promoted-site-files.txt
+          diff -u expected-site-files.txt promoted-site-files.txt
+
+      - name: Configure Publisher App commit identity
+        id: publisher-identity
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.publisher-token.outputs.token }}
+          APP_SLUG: ${{ steps.publisher-token.outputs.app-slug }}
+        run: |
+          set -euo pipefail
+          bot_login="${APP_SLUG}[bot]"
+          bot_id="$(gh api "/users/${bot_login}" --jq '.id')"
+          [[ "$bot_id" =~ ^[0-9]+$ ]] || { echo "Could not resolve Publisher App bot ID."; exit 1; }
+          echo "name=$bot_login" >> "$GITHUB_OUTPUT"
+          echo "email=${bot_id}+${bot_login}@users.noreply.github.com" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push validated public update
+        shell: bash
+        working-directory: public-repo
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          BOT_NAME: ${{ steps.publisher-identity.outputs.name }}
+          BOT_EMAIL: ${{ steps.publisher-identity.outputs.email }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "$BOT_NAME"
+          git config user.email "$BOT_EMAIL"
+
+          while IFS= read -r path; do
+            git add -- "$path"
+          done < ../expected-site-files.txt
+
+          if git diff --cached --quiet; then
+            echo "No allow-listed site changes to publish."
+            exit 0
+          fi
+
+          git commit -m "Publish Patch Watch from ${SOURCE_SHA}"
+          git push origin HEAD:main
