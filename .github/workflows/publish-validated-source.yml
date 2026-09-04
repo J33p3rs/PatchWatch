@@ -1,6 +1,8 @@
 name: Patch Watch - Publish Validated Source
 
 on:
+  schedule:
+    - cron: "*/30 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -32,9 +34,7 @@ jobs:
               missing=1
             fi
           done
-          if [[ "$missing" -ne 0 ]]; then
-            exit 1
-          fi
+          test "$missing" -eq 0
 
       - name: Create read-only source token
         id: source-token
@@ -46,6 +46,7 @@ jobs:
           repositories: ai-learning-challenge
           permission-actions: read
           permission-contents: read
+          permission-pull-requests: read
 
       - name: Resolve and verify latest validated private source commit
         id: source
@@ -61,21 +62,12 @@ jobs:
               '/repos/J33p3rs/ai-learning-challenge/actions/workflows/patchwatch-security.yml/runs?branch=main&event=push&status=success&per_page=1' \
               --jq '.workflow_runs[0].head_sha // empty'
           )"
-
-          if [[ ! "$source_sha" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "Could not resolve a 40-character SHA from the latest successful Patch Watch security run on main."
-            exit 1
-          fi
+          [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]] || { echo "Could not resolve latest successful Patch Watch source SHA."; exit 1; }
 
           main_sha="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
-          if [[ ! "$main_sha" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "Could not resolve private main SHA."
-            exit 1
-          fi
+          [[ "$main_sha" =~ ^[0-9a-f]{40}$ ]] || { echo "Could not resolve private main SHA."; exit 1; }
 
-          ancestry_status="$(
-            gh api "/repos/J33p3rs/ai-learning-challenge/compare/${source_sha}...${main_sha}" --jq '.status'
-          )"
+          ancestry_status="$(gh api "/repos/J33p3rs/ai-learning-challenge/compare/${source_sha}...${main_sha}" --jq '.status')"
           if [[ "$ancestry_status" != "ahead" && "$ancestry_status" != "identical" ]]; then
             echo "Validated source is not an ancestor of current private main (status: $ancestry_status)."
             exit 1
@@ -86,14 +78,13 @@ jobs:
           )"
           if [[ "$validator_blob_sha" != "$TRUSTED_SECURITY_WORKFLOW_BLOB_SHA" ]]; then
             echo "Candidate source used an untrusted Patch Watch security workflow definition."
-            echo "Expected validator blob: $TRUSTED_SECURITY_WORKFLOW_BLOB_SHA"
-            echo "Candidate validator blob: $validator_blob_sha"
+            echo "Expected: $TRUSTED_SECURITY_WORKFLOW_BLOB_SHA"
+            echo "Candidate: $validator_blob_sha"
             exit 1
           fi
 
           echo "Validated private source: $source_sha"
           echo "Current private main:      $main_sha"
-          echo "Trusted validator blob:    $validator_blob_sha"
           echo "sha=$source_sha" >> "$GITHUB_OUTPUT"
 
       - name: Check out validated private source
@@ -112,25 +103,15 @@ jobs:
           set -euo pipefail
 
           mkdir -p publish/data
-          cp source/PatchWatch/index.html publish/index.html
-          cp source/PatchWatch/nvd.html publish/nvd.html
-          cp source/PatchWatch/kev.html publish/kev.html
-          cp source/PatchWatch/app.js publish/app.js
-          cp source/PatchWatch/nvd.js publish/nvd.js
-          cp source/PatchWatch/kev.js publish/kev.js
-          cp source/PatchWatch/chart-scroll.js publish/chart-scroll.js
-          cp source/PatchWatch/bar-selection.js publish/bar-selection.js
-          cp source/PatchWatch/style.css publish/style.css
-          cp source/PatchWatch/trend.css publish/trend.css
-          cp source/PatchWatch/bar-selection.css publish/bar-selection.css
-          cp source/PatchWatch/data/patches.json publish/data/patches.json
-          cp source/PatchWatch/data/fortinet.json publish/data/fortinet.json
-          cp source/PatchWatch/data/ios.json publish/data/ios.json
-          cp source/PatchWatch/data/macos.json publish/data/macos.json
-          cp source/PatchWatch/data/chrome.json publish/data/chrome.json
-          cp source/PatchWatch/data/firefox.json publish/data/firefox.json
-          cp source/PatchWatch/data/nvd.json publish/data/nvd.json
-          cp source/PatchWatch/data/kev.json publish/data/kev.json
+          for path in \
+            index.html nvd.html kev.html \
+            app.js nvd.js kev.js chart-scroll.js bar-selection.js \
+            style.css trend.css bar-selection.css \
+            data/patches.json data/fortinet.json data/ios.json data/macos.json \
+            data/chrome.json data/firefox.json data/nvd.json data/kev.json data/linux-kernel.json; do
+            mkdir -p "publish/$(dirname "$path")"
+            cp "source/PatchWatch/$path" "publish/$path"
+          done
           cp source/PatchWatch/PUBLIC-README.md publish/README.md
           cp source/PatchWatch/LICENSE publish/LICENSE
 
@@ -146,6 +127,7 @@ jobs:
           data/fortinet.json
           data/ios.json
           data/kev.json
+          data/linux-kernel.json
           data/macos.json
           data/nvd.json
           data/patches.json
@@ -182,7 +164,8 @@ jobs:
           persist-credentials: true
           fetch-depth: 0
 
-      - name: Refuse source rollback and verify current site-file boundary
+      - name: Verify forward-only source and classify changes
+        id: gate
         shell: bash
         env:
           GH_TOKEN: ${{ steps.source-token.outputs.token }}
@@ -191,36 +174,94 @@ jobs:
           set -euo pipefail
 
           current_message="$(
-            git -C public-repo log \
-              --extended-regexp \
-              --grep='^Publish Patch Watch from [0-9a-f]{40}$' \
-              -n 1 \
-              --pretty=%s
+            git -C public-repo log --format=%s |
+              grep -m1 -E '^Publish Patch Watch from [0-9a-f]{40}$' || true
           )"
+          if [[ ! "$current_message" =~ ^Publish\ Patch\ Watch\ from\ ([0-9a-f]{40})$ ]]; then
+            echo "No recognised publication source marker exists in public history."
+            exit 1
+          fi
+          current_source="${BASH_REMATCH[1]}"
 
-          if [[ "$current_message" =~ ^Publish\ Patch\ Watch\ from\ ([0-9a-f]{40})$ ]]; then
-            current_source="${BASH_REMATCH[1]}"
-            status="$(
-              gh api "/repos/J33p3rs/ai-learning-challenge/compare/${current_source}...${SOURCE_SHA}" \
-                --jq '.status'
-            )"
-            if [[ "$status" != "ahead" && "$status" != "identical" ]]; then
-              echo "Candidate source would not move safely forward from the most recently published source (status: $status)."
-              exit 1
-            fi
-          else
-            echo "No recognised publication source marker exists in public history; refusing ambiguous migration baseline."
+          status="$(gh api "/repos/J33p3rs/ai-learning-challenge/compare/${current_source}...${SOURCE_SHA}" --jq '.status')"
+          if [[ "$status" != "ahead" && "$status" != "identical" ]]; then
+            echo "Candidate would not move forward from current published source (status: $status)."
             exit 1
           fi
 
-          find public-repo \
-            -path 'public-repo/.git' -prune -o \
-            -path 'public-repo/.github' -prune -o \
-            -type f -printf '%P\n' | sort > current-site-files.txt
+          gh api "/repos/J33p3rs/ai-learning-challenge/compare/${current_source}...${SOURCE_SHA}" \
+            --jq '.files[].filename' > changed-files.txt
+
+          review_required=false
+          while IFS= read -r path; do
+            [[ -n "$path" ]] || continue
+            if [[ "$path" =~ ^PatchWatch/data/[^/]+\.json$ ]]; then
+              continue
+            fi
+            if [[ "$path" == PatchWatch/* || "$path" =~ ^\.github/workflows/patchwatch-.*\.yml$ ]]; then
+              review_required=true
+              echo "Codex review required due to: $path"
+            fi
+          done < changed-files.txt
+
+          echo "current_source=$current_source" >> "$GITHUB_OUTPUT"
+          echo "review_required=$review_required" >> "$GITHUB_OUTPUT"
+
+      - name: Require exact-source Codex review evidence for substantive changes
+        if: steps.gate.outputs.review_required == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          CURRENT_SOURCE: ${{ steps.gate.outputs.current_source }}
+        run: |
+          set -euo pipefail
+
+          pr_numbers="$(
+            gh api "/repos/J33p3rs/ai-learning-challenge/commits/${SOURCE_SHA}/pulls" \
+              --jq ".[] | select(.head.sha == \"${SOURCE_SHA}\") | .number"
+          )"
+
+          reviewed=false
+          while IFS= read -r pr; do
+            [[ "$pr" =~ ^[0-9]+$ ]] || continue
+            base_sha="$(gh api "/repos/J33p3rs/ai-learning-challenge/pulls/${pr}" --jq '.base.sha')"
+            [[ "$base_sha" == "$CURRENT_SOURCE" ]] || continue
+
+            evidence="$(
+              gh api "/repos/J33p3rs/ai-learning-challenge/pulls/${pr}/reviews" \
+                --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and .commit_id == \"${SOURCE_SHA}\") | .id" |
+                tail -n 1
+            )"
+            if [[ "$evidence" =~ ^[0-9]+$ ]]; then
+              echo "Codex review evidence found on release-review PR #${pr} for ${SOURCE_SHA}."
+              reviewed=true
+              break
+            fi
+          done <<< "$pr_numbers"
+
+          if [[ "$reviewed" != true ]]; then
+            echo "Substantive Patch Watch changes require Codex review evidence tied to exact source ${SOURCE_SHA}."
+            exit 1
+          fi
+
+      - name: Verify current public site-file boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git -C public-repo ls-files -s | while read -r mode object stage path; do
+            [[ "$path" == .github/* ]] && continue
+            if [[ "$mode" != "100644" && "$mode" != "100755" ]]; then
+              echo "Unexpected non-regular tracked entry: mode=$mode path=$path"
+              exit 1
+            fi
+            echo "$path"
+          done | sort > current-site-files.txt
 
           unexpected="$(comm -23 current-site-files.txt expected-site-files.txt || true)"
           if [[ -n "$unexpected" ]]; then
-            echo "Unexpected public site file(s) found:"
+            echo "Unexpected public site tracked entry/entries:"
             echo "$unexpected"
             exit 1
           fi
@@ -229,17 +270,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           while IFS= read -r path; do
             mkdir -p "public-repo/$(dirname "$path")"
             cp "publish/$path" "public-repo/$path"
           done < expected-site-files.txt
 
-          find public-repo \
-            -path 'public-repo/.git' -prune -o \
-            -path 'public-repo/.github' -prune -o \
-            -type f -printf '%P\n' | sort > promoted-site-files.txt
-
+          git -C public-repo ls-files -s | while read -r mode object stage path; do
+            [[ "$path" == .github/* ]] && continue
+            if [[ "$mode" != "100644" && "$mode" != "100755" ]]; then
+              echo "Unexpected non-regular tracked entry after promotion: mode=$mode path=$path"
+              exit 1
+            fi
+            echo "$path"
+          done | sort > promoted-site-files.txt
           diff -u expected-site-files.txt promoted-site-files.txt
 
       - name: Configure Publisher App commit identity
@@ -252,10 +295,7 @@ jobs:
           set -euo pipefail
           bot_login="${APP_SLUG}[bot]"
           bot_id="$(gh api "/users/${bot_login}" --jq '.id')"
-          if [[ ! "$bot_id" =~ ^[0-9]+$ ]]; then
-            echo "Could not resolve Publisher App bot user ID."
-            exit 1
-          fi
+          [[ "$bot_id" =~ ^[0-9]+$ ]] || { echo "Could not resolve Publisher App bot ID."; exit 1; }
           echo "name=$bot_login" >> "$GITHUB_OUTPUT"
           echo "email=${bot_id}+${bot_login}@users.noreply.github.com" >> "$GITHUB_OUTPUT"
 
@@ -269,11 +309,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          if git diff --quiet && [[ -z "$(git status --porcelain --untracked-files=normal | grep -v '^?? \.github/' || true)" ]]; then
-            echo "No public site changes to publish."
-            exit 0
-          fi
-
           git config user.name "$BOT_NAME"
           git config user.email "$BOT_EMAIL"
 
@@ -282,7 +317,7 @@ jobs:
           done < ../expected-site-files.txt
 
           if git diff --cached --quiet; then
-            echo "No allow-listed site changes to commit."
+            echo "No allow-listed site changes to publish."
             exit 0
           fi
 
