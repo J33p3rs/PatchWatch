@@ -15,6 +15,10 @@
     return `Selected: ${label}`;
   }
 
+  function shouldClearSelection(ariaPressed) {
+    return ariaPressed === "true";
+  }
+
   function ensureSummary(container) {
     const summaryId = `${container.id}-selection`;
     let summary = document.getElementById(summaryId);
@@ -39,6 +43,11 @@
   }
 
   function selectBar(container, summary, bar) {
+    if (shouldClearSelection(bar.getAttribute("aria-pressed"))) {
+      resetSelection(container, summary);
+      return;
+    }
+
     container.querySelectorAll(BAR_SELECTOR).forEach((candidate) => {
       const selected = candidate === bar;
       candidate.classList.toggle("bar-selected", selected);
@@ -90,5 +99,5 @@
     }
   }
 
-  return { isActivationKey, selectedSummary };
+  return { isActivationKey, selectedSummary, shouldClearSelection };
 });

@@ -118,24 +118,43 @@ const VENDORS = {
       "Standard and ESR advisories in the same month are unioned by CVE ID, so the same vulnerability is counted once within the Firefox series. Firefox-for-iOS-only and Firefox-for-Android-only advisories are excluded.",
     ],
   },
+  linux: {
+    label: "Linux kernel",
+    dataUrl: "data/linux-kernel.json",
+    valueKey: "linux_kernel_cna_cves",
+    includeInAll: false,
+    eyebrow: "Linux kernel CNA",
+    lede: "CVEs published by the Linux kernel CNA each calendar month, using the kernel project's own vulnerability repository.",
+    latestTitle: "Latest month",
+    latestNote: "Linux kernel CNA CVEs",
+    valueDescription: "Linux kernel CNA CVEs",
+    monthlyAria: "Bar chart of monthly Linux kernel CNA CVE publication counts",
+    annualAria: "Bar chart of annual Linux kernel CNA CVE publication totals",
+    averageSuffix: "Linux kernel CNA CVEs per month across this window.",
+    strongText: "Linux kernel CNA CVEs",
+    method: [
+      "Patch Watch counts Linux kernel CNA CVEs in the official kernel `vulns.git` published tree by the month each current CVE path first appears there. Git repository chronology is used because some authoritative records omit `cveMetadata.datePublished` and some enter the tree through moves or renames.",
+      "The kernel CNA deliberately assigns CVEs conservatively to many fixes that might have security impact depending on configuration. This is disclosure/assignment volume, not the number of exploitable vulnerabilities on a specific Linux system. The series is intentionally excluded from All because its assignment model and scale are materially different from the existing vendor/platform aggregation.",
+    ],
+  },
 };
 
 const VALID_VIEWS = new Set(["all", ...Object.keys(VENDORS)]);
 
 const ALL_VIEW = {
   label: "All",
-  eyebrow: "All tracked vendors",
-  lede: "Combined headline vulnerability counts across every vendor currently tracked by Patch Watch.",
+  eyebrow: "All included vendors",
+  lede: "Combined headline vulnerability counts across the vendor/platform series included in the Patch Watch All measure.",
   latestTitle: "Latest common month",
   latestNote: "combined tracked-vendor count",
   valueDescription: "combined tracked-vendor CVEs",
-  monthlyAria: "Bar chart of combined monthly headline vulnerability counts across all tracked Patch Watch vendors",
-  annualAria: "Bar chart of combined annual headline vulnerability counts across all tracked Patch Watch vendors",
+  monthlyAria: "Bar chart of combined monthly headline vulnerability counts across the Patch Watch series included in All",
+  annualAria: "Bar chart of combined annual headline vulnerability counts across the Patch Watch series included in All",
   averageSuffix: "combined tracked-vendor CVEs per common month across this window.",
   strongText: "existing Patch Watch headline metric",
   method: [
-    "The All vendors view sums each vendor's existing Patch Watch headline metric for months where every included vendor has data.",
-    "The total is an operational comparison measure, not a count of globally unique CVEs and not a claim that each vendor uses the same disclosure or patch-release process. iOS and macOS are intentionally separate platform series, so a CVE affecting both can contribute to both platform totals. Adding a future vendor to the configured dataset automatically adds it to this view unless it is explicitly excluded.",
+    "The All vendors view sums each included vendor's existing Patch Watch headline metric for months where every included vendor has data.",
+    "The total is an operational comparison measure, not a count of globally unique CVEs and not a claim that each vendor uses the same disclosure or patch-release process. iOS and macOS are intentionally separate platform series, so a CVE affecting both can contribute to both platform totals. Linux kernel is explicitly excluded because its CNA assignment model and publication scale are materially different; future series are included only when their configuration permits it.",
   ],
 };
 
