@@ -1,0 +1,21 @@
+name: Patch Watch - Publisher Self Test
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/publisher-self-test.yml'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch production publisher
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run publish-validated-source.yml --ref main
