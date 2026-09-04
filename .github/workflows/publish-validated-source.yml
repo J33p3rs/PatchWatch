@@ -242,7 +242,7 @@ jobs:
 
             clean_comment_id="$(
               gh api "/repos/J33p3rs/ai-learning-challenge/issues/${pr}/comments?per_page=100" \
-                --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and (.body | startswith(\"Codex Review: Didn't find any major issues.\")) and (.body | contains(\"**Reviewed commit:** \\\`${short_sha}\\\`\"))) | .id" |
+                --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and (.body | startswith(\"Codex Review: Didn't find any major issues.\")) and (.body | contains(\"**Reviewed commit:**\")) and (.body | contains(\"${short_sha}\"))) | .id" |
                 tail -n 1
             )"
             if [[ "$clean_comment_id" =~ ^[0-9]+$ ]]; then
