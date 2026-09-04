@@ -20,4 +20,4 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh workflow run publish-validated-source.yml --repo J33p3rs/PatchWatch --ref main
 
-# Fresh-run trigger after clean-review matcher fix.
+# Fresh-run trigger after direct release-review PR fix.
