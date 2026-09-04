@@ -279,6 +279,7 @@ jobs:
           while IFS= read -r path; do
             mkdir -p "public-repo/$(dirname "$path")"
             cp "publish/$path" "public-repo/$path"
+            git -C public-repo add -N -- "$path"
           done < expected-site-files.txt
 
           git -C public-repo ls-files -s | while read -r mode object stage path; do
