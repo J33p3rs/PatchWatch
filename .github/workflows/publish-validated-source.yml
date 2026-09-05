@@ -86,9 +86,10 @@ jobs:
           main_sha="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
           [[ "$main_sha" =~ ^[0-9a-f]{40}$ ]] || { echo "Could not resolve private main SHA."; exit 1; }
 
-          ancestry_status="$(gh api "/repos/J33p3rs/ai-learning-challenge/compare/${source_sha}...${main_sha}" --jq '.status')"
-          if [[ "$ancestry_status" != "ahead" && "$ancestry_status" != "identical" ]]; then
-            echo "Validated source is not an ancestor of current private main (status: $ancestry_status)."
+          if [[ "$source_sha" != "$main_sha" ]]; then
+            echo "Latest successful Patch Watch source is not current private main; waiting for exact-main security validation."
+            echo "Validated: $source_sha"
+            echo "Main:      $main_sha"
             exit 1
           fi
 
