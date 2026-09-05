@@ -97,88 +97,14 @@ jobs:
           persist-credentials: false
           fetch-depth: 1
 
-      - name: Verify committed Monthly Notes match source data
-        shell: bash
-        working-directory: source
-        run: |
-          set -euo pipefail
-          python PatchWatch/scripts/build_notes_index.py --backfill --latest
-          stale="$(git status --porcelain -- PatchWatch/data/notes.json PatchWatch/generated/notes PatchWatch/notes)"
-          if [[ -n "$stale" ]]; then
-            echo "Monthly Notes are missing or stale for this validated source; refusing publication."
-            echo "$stale"
-            exit 1
-          fi
-
-      - name: Build and verify allow-listed public artifact
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          mkdir -p publish/data
-          for path in \
-            index.html nvd.html kev.html notes.html \
-            app.js nvd.js kev.js notes.js chart-scroll.js bar-selection.js \
-            style.css trend.css bar-selection.css notes.css \
-            data/patches.json data/fortinet.json data/ios.json data/macos.json \
-            data/chrome.json data/firefox.json data/nvd.json data/kev.json data/linux-kernel.json data/notes.json; do
-            mkdir -p "publish/$(dirname "$path")"
-            cp "source/PatchWatch/$path" "publish/$path"
-          done
-          cp source/PatchWatch/PUBLIC-README.md publish/README.md
-          cp source/PatchWatch/LICENSE publish/LICENSE
-
-          cat > expected-site-files.txt <<'EOF'
-          LICENSE
-          README.md
-          app.js
-          bar-selection.css
-          bar-selection.js
-          chart-scroll.js
-          data/chrome.json
-          data/firefox.json
-          data/fortinet.json
-          data/ios.json
-          data/kev.json
-          data/linux-kernel.json
-          data/macos.json
-          data/notes.json
-          data/nvd.json
-          data/patches.json
-          index.html
-          kev.html
-          kev.js
-          notes.css
-          notes.html
-          notes.js
-          nvd.html
-          nvd.js
-          style.css
-          trend.css
-          EOF
-
-          find publish -type f -printf '%P\n' | sort > actual-site-files.txt
-          sort -o expected-site-files.txt expected-site-files.txt
-          diff -u expected-site-files.txt actual-site-files.txt
-
-      - name: Create public-repository publisher token
-        id: publisher-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          client-id: ${{ vars.PATCHWATCH_PUBLISHER_CLIENT_ID }}
-          private-key: ${{ secrets.PATCHWATCH_PUBLISHER_PRIVATE_KEY }}
-          owner: J33p3rs
-          repositories: PatchWatch
-          permission-contents: write
-
-      - name: Check out public repository
+      - name: Check out public repository read-only
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           repository: J33p3rs/PatchWatch
           ref: main
-          token: ${{ steps.publisher-token.outputs.token }}
+          token: ${{ github.token }}
           path: public-repo
-          persist-credentials: true
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Verify forward-only source and classify changes
@@ -270,6 +196,70 @@ jobs:
           echo "Substantive Patch Watch changes require Codex review evidence tied to exact source ${SOURCE_SHA}."
           exit 1
 
+      - name: Verify committed Monthly Notes match source data
+        shell: bash
+        working-directory: source
+        run: |
+          set -euo pipefail
+          python PatchWatch/scripts/build_notes_index.py --backfill --latest
+          stale="$(git status --porcelain -- PatchWatch/data/notes.json PatchWatch/generated/notes PatchWatch/notes)"
+          if [[ -n "$stale" ]]; then
+            echo "Monthly Notes are missing or stale for this validated source; refusing publication."
+            echo "$stale"
+            exit 1
+          fi
+
+      - name: Build and verify allow-listed public artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p publish/data
+          for path in \
+            index.html nvd.html kev.html notes.html \
+            app.js nvd.js kev.js notes.js chart-scroll.js bar-selection.js \
+            style.css trend.css bar-selection.css notes.css \
+            data/patches.json data/fortinet.json data/ios.json data/macos.json \
+            data/chrome.json data/firefox.json data/nvd.json data/kev.json data/linux-kernel.json data/notes.json; do
+            mkdir -p "publish/$(dirname "$path")"
+            cp "source/PatchWatch/$path" "publish/$path"
+          done
+          cp source/PatchWatch/PUBLIC-README.md publish/README.md
+          cp source/PatchWatch/LICENSE publish/LICENSE
+
+          cat > expected-site-files.txt <<'EOF'
+          LICENSE
+          README.md
+          app.js
+          bar-selection.css
+          bar-selection.js
+          chart-scroll.js
+          data/chrome.json
+          data/firefox.json
+          data/fortinet.json
+          data/ios.json
+          data/kev.json
+          data/linux-kernel.json
+          data/macos.json
+          data/notes.json
+          data/nvd.json
+          data/patches.json
+          index.html
+          kev.html
+          kev.js
+          notes.css
+          notes.html
+          notes.js
+          nvd.html
+          nvd.js
+          style.css
+          trend.css
+          EOF
+
+          find publish -type f -printf '%P\n' | sort > actual-site-files.txt
+          sort -o expected-site-files.txt expected-site-files.txt
+          diff -u expected-site-files.txt actual-site-files.txt
+
       - name: Verify current public site-file boundary
         shell: bash
         run: |
@@ -290,6 +280,24 @@ jobs:
             echo "$unexpected"
             exit 1
           fi
+
+      - name: Create public-repository publisher token
+        id: publisher-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.PATCHWATCH_PUBLISHER_CLIENT_ID }}
+          private-key: ${{ secrets.PATCHWATCH_PUBLISHER_PRIVATE_KEY }}
+          owner: J33p3rs
+          repositories: PatchWatch
+          permission-contents: write
+
+      - name: Configure Publisher App remote credentials
+        shell: bash
+        env:
+          PUBLISHER_TOKEN: ${{ steps.publisher-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          git -C public-repo remote set-url origin "https://x-access-token:${PUBLISHER_TOKEN}@github.com/J33p3rs/PatchWatch.git"
 
       - name: Promote validated site files
         shell: bash
