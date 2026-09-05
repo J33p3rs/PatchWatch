@@ -1,6 +1,74 @@
 const NOTES_DATA_URL = "data/notes.json";
 const VALID_MONTH = /^\d{4}-\d{2}$/;
 const SMALL_YOY_BASELINE = 10;
+const THEME_STORAGE_KEY = "patchwatch-theme";
+const VALID_THEMES = new Set(["light", "dark", "patchwatch90"]);
+
+function readUrlTheme() {
+  try {
+    const theme = new URL(window.location.href).searchParams.get("theme");
+    return VALID_THEMES.has(theme) ? theme : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function readStoredTheme() {
+  try {
+    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return VALID_THEMES.has(stored) ? stored : null;
+  } catch (error) {
+    console.warn("Patch Watch could not read the saved theme preference", error);
+    return null;
+  }
+}
+
+function saveTheme(theme) {
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch (error) {
+    console.warn("Patch Watch could not save the theme preference", error);
+  }
+}
+
+function systemTheme() {
+  try {
+    if (typeof window.matchMedia === "function" && window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
+  } catch (error) {
+    console.warn("Patch Watch could not read the system colour scheme", error);
+  }
+  return "light";
+}
+
+function updateThemeUrl(theme) {
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.set("theme", theme);
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  } catch (error) {
+    console.warn("Patch Watch could not update the theme URL parameter", error);
+  }
+}
+
+function applyTheme(theme, persist = false) {
+  const resolved = VALID_THEMES.has(theme) ? theme : "light";
+  document.documentElement.dataset.theme = resolved;
+  document.documentElement.style.colorScheme = resolved === "light" ? "light" : "dark";
+  const selector = document.querySelector("#theme-select");
+  if (selector) selector.value = resolved;
+  if (persist) saveTheme(resolved);
+}
+
+function initialiseTheme() {
+  const selector = document.querySelector("#theme-select");
+  if (selector) {
+    selector.addEventListener("change", () => {
+      applyTheme(selector.value, true);
+      updateThemeUrl(selector.value);
+    });
+  }
+  applyTheme(readUrlTheme() ?? readStoredTheme() ?? systemTheme());
+}
 
 function readRequestedMonth() {
   try {
@@ -184,6 +252,7 @@ if (typeof module === "object" && module.exports) {
 }
 
 if (typeof document !== "undefined") {
+  initialiseTheme();
   initialiseNotes().catch((error) => {
     console.error("Patch Watch notes failed to load", error);
     const target = document.querySelector("#note-article");
