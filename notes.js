@@ -1,5 +1,6 @@
 const NOTES_DATA_URL = "data/notes.json";
 const VALID_MONTH = /^\d{4}-\d{2}$/;
+const SMALL_YOY_BASELINE = 10;
 
 function readRequestedMonth() {
   try {
@@ -24,6 +25,30 @@ function fmtDelta(value) {
   if (value === null || value === undefined) return "n/a";
   const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(1)}%`;
+}
+
+function fmtYearComparison(metric) {
+  const baseline = metric.same_month_last_year;
+  if (baseline === null || baseline === undefined) return "n/a";
+  if (baseline < SMALL_YOY_BASELINE) return `${fmtNumber(metric.value)} vs ${fmtNumber(baseline)}`;
+  return fmtDelta(metric.versus_last_year_pct);
+}
+
+function observationMetric(text, metrics) {
+  return metrics.find((metric) => text.startsWith(`${metric.label}:`)) || null;
+}
+
+function formatObservation(text, metrics) {
+  const metric = observationMetric(text, metrics);
+  if (!metric) return text;
+  const baseline = metric.same_month_last_year;
+  if (baseline === null || baseline === undefined || baseline >= SMALL_YOY_BASELINE) return text;
+  const pct = fmtDelta(metric.versus_last_year_pct);
+  const raw = fmtYearComparison(metric);
+  return text.replace(
+    `${pct} versus the same month last year`,
+    `${raw} versus the same month last year`,
+  );
 }
 
 function monthLabel(month) {
@@ -53,7 +78,7 @@ function renderMetricTable(metrics) {
   const body = document.createElement("tbody");
   metrics.forEach((metric) => {
     const row = document.createElement("tr");
-    [metric.label, fmtNumber(metric.value), fmtDelta(metric.versus_previous_pct), fmtDelta(metric.versus_trailing_average_pct), fmtDelta(metric.versus_last_year_pct)]
+    [metric.label, fmtNumber(metric.value), fmtDelta(metric.versus_previous_pct), fmtDelta(metric.versus_trailing_average_pct), fmtYearComparison(metric)]
       .forEach((value, index) => {
         const cell = document.createElement(index === 0 ? "th" : "td");
         cell.textContent = value;
@@ -90,7 +115,7 @@ function renderArticle(article) {
   const list = document.createElement("ul");
   article.observations.forEach((text) => {
     const item = document.createElement("li");
-    item.textContent = text;
+    item.textContent = formatObservation(text, article.metrics);
     list.appendChild(item);
   });
 
@@ -106,7 +131,7 @@ function renderArticle(article) {
 
   const method = document.createElement("p");
   method.className = "notes-method";
-  method.textContent = "Trend comparisons use repository counts only: previous month, the preceding six-month average and the same month last year. Different series have different methodologies, so relative movement matters more than comparing unlike raw totals.";
+  method.textContent = "Trend comparisons use repository counts only: previous month, the preceding six-month average and the same month last year. When the prior-year count is below 10, raw counts are shown instead of a percentage because tiny baselines can exaggerate percentage changes. Different series have different methodologies, so relative movement matters more than comparing unlike raw totals.";
 
   target.append(eyebrow, title, summary, combined, changedHeading, list, dataHeading, dataCopy, renderMetricTable(article.metrics), watchHeading, watch, method);
 }
@@ -155,7 +180,7 @@ async function initialiseNotes() {
 }
 
 if (typeof module === "object" && module.exports) {
-  module.exports = { fmtDelta, monthLabel, groupArticlesByYear, selectArticle };
+  module.exports = { fmtDelta, fmtYearComparison, observationMetric, formatObservation, monthLabel, groupArticlesByYear, selectArticle };
 }
 
 if (typeof document !== "undefined") {
