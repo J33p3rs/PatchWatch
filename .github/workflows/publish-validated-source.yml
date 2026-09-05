@@ -47,6 +47,25 @@ jobs:
           permission-actions: read
           permission-contents: read
           permission-pull-requests: read
+          permission-vulnerability-alerts: read
+
+      - name: Block High/Critical Dependabot alerts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          gh api --paginate \
+            '/repos/J33p3rs/ai-learning-challenge/dependabot/alerts?state=open&per_page=100' \
+            --jq '.[]' | jq -s '[.[] | select(.security_advisory.severity == "high" or .security_advisory.severity == "critical")]' > dependabot-blockers.json
+
+          blocker_count="$(jq 'length' dependabot-blockers.json)"
+          if (( blocker_count > 0 )); then
+            echo "Open High/Critical Dependabot alerts block PatchWatch publication: ${blocker_count}"
+            jq -r '.[] | "- alert #\(.number): \(.dependency.package.name) [\(.security_advisory.severity)] \(.security_advisory.ghsa_id)"' dependabot-blockers.json
+            exit 1
+          fi
+          echo "No open High/Critical Dependabot alerts."
 
       - name: Resolve and verify latest validated private source commit
         id: source
