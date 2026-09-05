@@ -11,6 +11,7 @@ const COMPARISON_SERIES = {
   macos: { label: "macOS", dataUrl: "data/macos.json", valueKey: "macos_security_cves" },
   chrome: { label: "Chrome", dataUrl: "data/chrome.json", valueKey: "chrome_release_cves" },
   firefox: { label: "Firefox", dataUrl: "data/firefox.json", valueKey: "firefox_security_cves" },
+  linux: { label: "Linux kernel", dataUrl: "data/linux-kernel.json", valueKey: "linux_kernel_cna_cves" },
 };
 
 const VALID_COMPARISONS = new Set(Object.keys(COMPARISON_SERIES));
@@ -289,7 +290,7 @@ function renderComparisonSummary(items, vendorLabel) {
 
   document.querySelector("#comparison-summary").textContent =
     `${vendorLabel}'s 12-month rolling trend is ${formatSignedPercent(vendorChange)} from the common baseline; ` +
-    `NVD is ${formatSignedPercent(nvdChange)}. The selected vendor is ${relationship} the global trend over this comparison window.`;
+    `NVD is ${formatSignedPercent(nvdChange)}. The selected vendor / project is ${relationship} the global trend over this comparison window.`;
 }
 
 async function renderComparison(key, nvdData) {

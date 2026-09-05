@@ -20,6 +20,7 @@
       <a href="index.html">Vendor dashboard</a>
       <a href="nvd.html">NVD global</a>
       <a href="kev.html" aria-current="page">CISA KEV</a>
+      <a href="notes.html">Monthly Notes</a>
     </nav>
 
     <div class="retro-only retro-marquee" aria-hidden="true">
@@ -70,18 +71,18 @@
     <section class="chart-card" aria-labelledby="comparison-heading">
       <div class="section-heading trend-heading">
         <div>
-          <p class="eyebrow">Vendor vs exploited trend</p>
-          <h2 id="comparison-heading">Is the vendor following the KEV trend?</h2>
+          <p class="eyebrow">Vendor / project vs exploited trend</p>
+          <h2 id="comparison-heading">Is the selected series following the KEV trend?</h2>
         </div>
         <label class="comparison-control" for="comparison-vendor">
           <span>Compare</span>
-          <select id="comparison-vendor" aria-label="Select vendor or platform to compare with CISA KEV"></select>
+          <select id="comparison-vendor" aria-label="Select vendor, platform or project to compare with CISA KEV"></select>
         </label>
       </div>
-      <p class="comparison-explainer">Both series use 12-month rolling averages and are indexed to <strong>100 at the first clean common comparison point</strong>. The comparison starts in November 2022 so the initial November 2021 KEV catalogue seed is outside the rolling window.</p>
+      <p class="comparison-explainer">Both series use 12-month rolling averages and are indexed to <strong>100 at the first clean common comparison point</strong>. The comparison starts no earlier than November 2022 so the initial November 2021 KEV catalogue seed is outside the rolling window; series with shorter histories, such as Linux kernel, begin at their first valid 12-month common window.</p>
       <p id="comparison-summary" class="trend-summary" aria-live="polite"></p>
       <div class="trend-legend" aria-hidden="true">
-        <span><i class="trend-swatch trend-swatch-vendor"></i><span id="comparison-vendor-label">Vendor</span></span>
+        <span><i class="trend-swatch trend-swatch-vendor"></i><span id="comparison-vendor-label">Selected series</span></span>
         <span><i class="trend-swatch trend-swatch-global"></i>CISA KEV</span>
       </div>
       <div id="comparison-chart" class="chart-wrap trend-chart" aria-live="polite"></div>
@@ -102,7 +103,7 @@
       <h2 id="method-heading">What the number means</h2>
       <p>Patch Watch counts entries in CISA's Known Exploited Vulnerabilities catalogue by each record's <code>dateAdded</code>. The source is CISA's official <code>cisagov/kev-data</code> GitHub mirror of the canonical catalogue.</p>
       <p>This measures <strong>when CISA added a CVE to KEV</strong>. It does not mean exploitation began that month, and it is not a vendor patch count or a count of newly published CVEs.</p>
-      <p>The vendor comparison uses normalised rolling trends rather than raw totals. It asks whether a vendor's vulnerability-disclosure activity is moving faster or slower than the rate at which vulnerabilities are being added to KEV.</p>
+      <p>The vendor/project comparison uses normalised rolling trends rather than raw totals. It asks whether a tracked disclosure/assignment series is moving faster or slower than the rate at which vulnerabilities are being added to KEV.</p>
     </section>
 
     <div class="retro-only retro-webring" aria-hidden="true">

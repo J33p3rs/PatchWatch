@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Patch Watch monthly notes analyse vulnerability and patching trends across the tracked metrics.">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Patch Watch — Monthly Notes</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="notes.css">
+  <script src="notes.js" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <nav class="site-nav" aria-label="Patch Watch sections">
+      <a href="index.html">Vendor dashboard</a>
+      <a href="nvd.html">NVD global</a>
+      <a href="kev.html">CISA KEV</a>
+      <a href="notes.html" aria-current="page">Monthly Notes</a>
+    </nav>
+
+    <header class="notes-header">
+      <div>
+        <p class="eyebrow">PatchWatch Notes</p>
+        <h1>Monthly trend notes</h1>
+        <p class="lede">Short monthly analysis of what changed in the shape of the PatchWatch data — not another release-day vulnerability tally.</p>
+      </div>
+    </header>
+
+    <div class="notes-layout">
+      <article id="note-article" class="notes-article" aria-live="polite">
+        <p class="section-note">Loading the latest monthly note…</p>
+      </article>
+
+      <aside class="notes-sidebar" aria-labelledby="archive-heading">
+        <h2 id="archive-heading">Browse notes</h2>
+        <div id="notes-archive"></div>
+      </aside>
+    </div>
+
+    <footer>
+      <p>Patch Watch monthly notes are generated from repository data and deterministic trend calculations.</p>
+    </footer>
+  </main>
+</body>
+</html>

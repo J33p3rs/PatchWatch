@@ -12,6 +12,7 @@ const COMPARISON_SERIES = {
   macos: { label: "macOS", dataUrl: "data/macos.json", valueKey: "macos_security_cves" },
   chrome: { label: "Chrome", dataUrl: "data/chrome.json", valueKey: "chrome_release_cves" },
   firefox: { label: "Firefox", dataUrl: "data/firefox.json", valueKey: "firefox_security_cves" },
+  linux: { label: "Linux kernel", dataUrl: "data/linux-kernel.json", valueKey: "linux_kernel_cna_cves" },
 };
 
 const VALID_COMPARISONS = new Set(Object.keys(COMPARISON_SERIES));
@@ -265,6 +266,7 @@ async function loadComparisonDataset(key) {
 
 function renderComparisonSummary(items, vendorLabel) {
   const latest = items.at(-1);
+  const baselineMonth = items[0].month;
   const vendorChange = latest.vendorIndex - 100;
   const kevChange = latest.globalIndex - 100;
   const difference = vendorChange - kevChange;
@@ -273,8 +275,8 @@ function renderComparisonSummary(items, vendorLabel) {
   if (difference < -5) relationship = "rising slower than";
 
   document.querySelector("#comparison-summary").textContent =
-    `${vendorLabel}'s 12-month rolling trend is ${formatSignedPercent(vendorChange)} from the clean November 2022 baseline; ` +
-    `CISA KEV additions are ${formatSignedPercent(kevChange)}. The selected vendor is ${relationship} the KEV addition trend over this comparison window.`;
+    `${vendorLabel}'s 12-month rolling trend is ${formatSignedPercent(vendorChange)} from the ${formatMonth(baselineMonth)} baseline; ` +
+    `CISA KEV additions are ${formatSignedPercent(kevChange)}. The selected vendor / project is ${relationship} the KEV addition trend over this comparison window.`;
 }
 
 async function renderComparison(key, kevData) {

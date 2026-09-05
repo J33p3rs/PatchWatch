@@ -20,6 +20,7 @@
       <a href="index.html">Vendor dashboard</a>
       <a href="nvd.html" aria-current="page">NVD global</a>
       <a href="kev.html">CISA KEV</a>
+      <a href="notes.html">Monthly Notes</a>
     </nav>
 
     <div class="retro-only retro-marquee" aria-hidden="true">
@@ -69,18 +70,18 @@
     <section class="chart-card" aria-labelledby="comparison-heading">
       <div class="section-heading trend-heading">
         <div>
-          <p class="eyebrow">Vendor vs global</p>
-          <h2 id="comparison-heading">Is the vendor following the global trend?</h2>
+          <p class="eyebrow">Vendor / project vs global</p>
+          <h2 id="comparison-heading">Is the selected series following the global trend?</h2>
         </div>
         <label class="comparison-control" for="comparison-vendor">
           <span>Compare</span>
-          <select id="comparison-vendor" aria-label="Select vendor or platform to compare with NVD"></select>
+          <select id="comparison-vendor" aria-label="Select vendor, platform or project to compare with NVD"></select>
         </label>
       </div>
       <p class="comparison-explainer">Both series use a 12-month rolling average and are indexed to <strong>100 at their first common comparison point</strong>. This compares direction and relative growth rather than misleading raw counts on very different scales.</p>
       <p id="comparison-summary" class="trend-summary" aria-live="polite"></p>
       <div class="trend-legend" aria-hidden="true">
-        <span><i class="trend-swatch trend-swatch-vendor"></i><span id="comparison-vendor-label">Vendor</span></span>
+        <span><i class="trend-swatch trend-swatch-vendor"></i><span id="comparison-vendor-label">Selected series</span></span>
         <span><i class="trend-swatch trend-swatch-global"></i>NVD global</span>
       </div>
       <div id="comparison-chart" class="chart-wrap trend-chart" aria-live="polite"></div>
@@ -100,8 +101,8 @@
     <section class="method-card" aria-labelledby="method-heading">
       <h2 id="method-heading">What the number means</h2>
       <p>Patch Watch queries the NVD CVE API 2.0 for each calendar month and counts records returned by publication date with rejected CVEs excluded.</p>
-      <p>This is a <strong>global vulnerability publication measure</strong>, not a vendor patch count. NVD is deliberately isolated from the vendor/platform All calculation because the same CVEs can already appear in Microsoft, Fortinet, Apple, Chrome, Firefox and future platform feeds.</p>
-      <p>The vendor-vs-global chart compares normalised rolling trends, not raw totals. It is intended to answer questions such as whether one vendor's disclosure volume is increasing faster or slower than the broader NVD publication trend.</p>
+      <p>This is a <strong>global vulnerability publication measure</strong>, not a vendor patch count. NVD is deliberately isolated from the vendor/platform All calculation because the same CVEs can already appear in Microsoft, Fortinet, Apple, Chrome, Firefox, Linux and future platform/project feeds.</p>
+      <p>The vendor/project-vs-global chart compares normalised rolling trends, not raw totals. It is intended to answer questions such as whether one tracked series is increasing faster or slower than the broader NVD publication trend.</p>
     </section>
 
     <div class="retro-only retro-webring" aria-hidden="true">
