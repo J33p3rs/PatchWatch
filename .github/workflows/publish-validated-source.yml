@@ -49,24 +49,6 @@ jobs:
           permission-pull-requests: read
           permission-vulnerability-alerts: read
 
-      - name: Block High/Critical Dependabot alerts
-        shell: bash
-        env:
-          GH_TOKEN: ${{ steps.source-token.outputs.token }}
-        run: |
-          set -euo pipefail
-          gh api --paginate \
-            '/repos/J33p3rs/ai-learning-challenge/dependabot/alerts?state=open&per_page=100' \
-            --jq '.[]' | jq -s '[.[] | select(.security_advisory.severity == "high" or .security_advisory.severity == "critical")]' > dependabot-blockers.json
-
-          blocker_count="$(jq 'length' dependabot-blockers.json)"
-          if (( blocker_count > 0 )); then
-            echo "Open High/Critical Dependabot alerts block PatchWatch publication: ${blocker_count}"
-            jq -r '.[] | "- alert #\(.number): \(.dependency.package.name) [\(.security_advisory.severity)] \(.security_advisory.ghsa_id)"' dependabot-blockers.json
-            exit 1
-          fi
-          echo "No open High/Critical Dependabot alerts."
-
       - name: Resolve and verify latest validated private source commit
         id: source
         shell: bash
@@ -106,6 +88,43 @@ jobs:
           echo "Validated private source: $source_sha"
           echo "Current private main:      $main_sha"
           echo "sha=$source_sha" >> "$GITHUB_OUTPUT"
+          echo "main_sha=$main_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Block High/Critical Dependabot alerts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
+          EXPECTED_MAIN_SHA: ${{ steps.source.outputs.main_sha }}
+        run: |
+          set -euo pipefail
+
+          before_sha="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
+          if [[ "$before_sha" != "$EXPECTED_MAIN_SHA" ]]; then
+            echo "Private main advanced before the Dependabot scan; refusing a stale dependency decision."
+            echo "Expected: $EXPECTED_MAIN_SHA"
+            echo "Current:  $before_sha"
+            exit 1
+          fi
+
+          gh api --paginate \
+            '/repos/J33p3rs/ai-learning-challenge/dependabot/alerts?state=open&per_page=100' \
+            --jq '.[]' | jq -s '[.[] | select(.security_advisory.severity == "high" or .security_advisory.severity == "critical")]' > dependabot-blockers.json
+
+          after_sha="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
+          if [[ "$after_sha" != "$EXPECTED_MAIN_SHA" ]]; then
+            echo "Private main advanced during the Dependabot scan; refusing an unbound dependency decision."
+            echo "Expected: $EXPECTED_MAIN_SHA"
+            echo "Current:  $after_sha"
+            exit 1
+          fi
+
+          blocker_count="$(jq 'length' dependabot-blockers.json)"
+          if (( blocker_count > 0 )); then
+            echo "Open High/Critical Dependabot alerts block PatchWatch publication: ${blocker_count}"
+            jq -r '.[] | "- alert #\(.number): \(.dependency.package.name) [\(.security_advisory.severity)] \(.security_advisory.ghsa_id)"' dependabot-blockers.json
+            exit 1
+          fi
+          echo "No open High/Critical Dependabot alerts for exact main ${EXPECTED_MAIN_SHA}."
 
       - name: Check out validated private source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -190,7 +209,7 @@ jobs:
           set -euo pipefail
 
           release_pr="$(
-            gh api '/repos/J33p3rs/ai-learning-challenge/pulls?state=open&per_page=100' \
+            gh api --paginate '/repos/J33p3rs/ai-learning-challenge/pulls?state=open&per_page=100' \
               --jq ".[] | select(((.head.ref == \"patchwatch-release-review\") or (.head.ref | startswith(\"patchwatch-release-review-\"))) and .head.sha == \"${SOURCE_SHA}\" and .base.sha == \"${CURRENT_SOURCE}\") | .number" |
               head -n 1
           )"
