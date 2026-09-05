@@ -126,14 +126,21 @@ jobs:
           fi
           current_source="${BASH_REMATCH[1]}"
 
-          status="$(gh api "/repos/J33p3rs/ai-learning-challenge/compare/${current_source}...${SOURCE_SHA}" --jq '.status')"
+          compare_json="$(gh api "/repos/J33p3rs/ai-learning-challenge/compare/${current_source}...${SOURCE_SHA}")"
+          status="$(jq -r '.status' <<<"$compare_json")"
           if [[ "$status" != "ahead" && "$status" != "identical" ]]; then
             echo "Candidate would not move forward from current published source (status: $status)."
             exit 1
           fi
 
-          gh api "/repos/J33p3rs/ai-learning-challenge/compare/${current_source}...${SOURCE_SHA}" \
-            --jq '.files[].filename' > changed-files.txt
+          changed_file_count="$(jq '.files | length' <<<"$compare_json")"
+          if (( changed_file_count >= 300 )); then
+            echo "Compare API returned ${changed_file_count} changed files, at or above GitHub's 300-file cap."
+            echo "Refusing data-only classification because the changed-file list may be truncated."
+            exit 1
+          fi
+
+          jq -r '.files[].filename' <<<"$compare_json" > changed-files.txt
 
           review_required=false
           while IFS= read -r path; do
