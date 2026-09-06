@@ -2,52 +2,16 @@
   "metadata": {
     "vendor": "Google",
     "product": "Chrome Desktop Stable",
-    "generated": "2026-08-29",
+    "generated": "2026-09-06",
     "metric": "Unique Chrome CNA CVEs first referenced by Google Chrome Desktop Stable releases in each calendar month",
     "metric_label": "Chrome release CVEs",
     "source": "CVEProject/cvelistV5 with Google Chrome Releases references",
     "source_url": "https://github.com/CVEProject/cvelistV5",
     "release_source_url": "https://chromereleases.googleblog.com/",
-    "coverage": "2021-09 through 2026-08",
+    "coverage": "2021-10 through 2026-09",
     "methodology_note": "Selects published CVE List v5 records assigned by the Chrome CNA for Google Chrome, then attributes each CVE to the earliest referenced Google 'Stable Channel Update for Desktop' URL. The release URL's YYYY/MM path defines the month. This avoids historical CVE List migration timestamps and counts public Chrome CVEs, not Google's broader security-fix total."
   },
   "monthly": [
-    {
-      "month": "2021-09",
-      "chrome_release_cves": 30,
-      "cves": [
-        "CVE-2021-30625",
-        "CVE-2021-30626",
-        "CVE-2021-30627",
-        "CVE-2021-30628",
-        "CVE-2021-30629",
-        "CVE-2021-30630",
-        "CVE-2021-30632",
-        "CVE-2021-30633",
-        "CVE-2021-37956",
-        "CVE-2021-37957",
-        "CVE-2021-37958",
-        "CVE-2021-37959",
-        "CVE-2021-37961",
-        "CVE-2021-37962",
-        "CVE-2021-37963",
-        "CVE-2021-37964",
-        "CVE-2021-37965",
-        "CVE-2021-37966",
-        "CVE-2021-37967",
-        "CVE-2021-37968",
-        "CVE-2021-37969",
-        "CVE-2021-37970",
-        "CVE-2021-37971",
-        "CVE-2021-37972",
-        "CVE-2021-37973",
-        "CVE-2021-37974",
-        "CVE-2021-37975",
-        "CVE-2021-37976",
-        "CVE-2021-4318",
-        "CVE-2021-4319"
-      ]
-    },
     {
       "month": "2021-10",
       "chrome_release_cves": 28,
@@ -3992,6 +3956,50 @@
         "CVE-2026-79292",
         "CVE-2026-79293"
       ]
+    },
+    {
+      "month": "2026-09",
+      "chrome_release_cves": 38,
+      "cves": [
+        "CVE-2026-84323",
+        "CVE-2026-84324",
+        "CVE-2026-84325",
+        "CVE-2026-84326",
+        "CVE-2026-84327",
+        "CVE-2026-84328",
+        "CVE-2026-84329",
+        "CVE-2026-84330",
+        "CVE-2026-84331",
+        "CVE-2026-84332",
+        "CVE-2026-84333",
+        "CVE-2026-84334",
+        "CVE-2026-84335",
+        "CVE-2026-84347",
+        "CVE-2026-84348",
+        "CVE-2026-84349",
+        "CVE-2026-84350",
+        "CVE-2026-84351",
+        "CVE-2026-84352",
+        "CVE-2026-84353",
+        "CVE-2026-84354",
+        "CVE-2026-84355",
+        "CVE-2026-84356",
+        "CVE-2026-84357",
+        "CVE-2026-84358",
+        "CVE-2026-84359",
+        "CVE-2026-85042",
+        "CVE-2026-85043",
+        "CVE-2026-85044",
+        "CVE-2026-85045",
+        "CVE-2026-85046",
+        "CVE-2026-85047",
+        "CVE-2026-85048",
+        "CVE-2026-85049",
+        "CVE-2026-85050",
+        "CVE-2026-85051",
+        "CVE-2026-85052",
+        "CVE-2026-85053"
+      ]
     }
   ],
   "annual": [
@@ -4017,9 +4025,9 @@
     },
     {
       "year": 2026,
-      "chrome_release_cves": 2468,
+      "chrome_release_cves": 2506,
       "partial_year": true,
-      "through_month": "2026-08"
+      "through_month": "2026-09"
     }
   ]
 }

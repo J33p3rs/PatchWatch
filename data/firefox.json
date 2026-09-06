@@ -2,33 +2,15 @@
   "metadata": {
     "vendor": "Mozilla",
     "product": "Firefox desktop and Firefox ESR",
-    "generated": "2026-08-29",
+    "generated": "2026-09-06",
     "metric": "Unique CVEs documented in Mozilla Firefox desktop and Firefox ESR security advisories announced in each calendar month",
     "metric_label": "Firefox security CVEs",
     "source": "Mozilla Foundation Security Advisories",
     "source_url": "https://www.mozilla.org/en-US/security/advisories/",
-    "coverage": "2021-09 through 2026-08",
+    "coverage": "2021-10 through 2026-09",
     "methodology_note": "Selects Mozilla Foundation Security Advisories whose titles identify versioned Firefox desktop or Firefox ESR releases, uses the advisory announcement date for chronology, and unions CVE IDs across qualifying advisories within each calendar month. Firefox-for-iOS-only and Firefox-for-Android-only advisories are excluded. CVEs repeated across standard and ESR branches in the same month are counted once."
   },
   "monthly": [
-    {
-      "month": "2021-09",
-      "firefox_security_cves": 7,
-      "cves": [
-        "CVE-2021-29993",
-        "CVE-2021-38491",
-        "CVE-2021-38492",
-        "CVE-2021-38493",
-        "CVE-2021-38494",
-        "CVE-2021-38495",
-        "CVE-2021-4221"
-      ],
-      "advisories": [
-        "MFSA2021-38",
-        "MFSA2021-39",
-        "MFSA2021-40"
-      ]
-    },
     {
       "month": "2021-10",
       "firefox_security_cves": 8,
@@ -1799,6 +1781,51 @@
         "MFSA2026-76",
         "MFSA2026-77"
       ]
+    },
+    {
+      "month": "2026-09",
+      "firefox_security_cves": 33,
+      "cves": [
+        "CVE-2026-16365",
+        "CVE-2026-16371",
+        "CVE-2026-74952",
+        "CVE-2026-75874",
+        "CVE-2026-84117",
+        "CVE-2026-84118",
+        "CVE-2026-84119",
+        "CVE-2026-84120",
+        "CVE-2026-84121",
+        "CVE-2026-84122",
+        "CVE-2026-84123",
+        "CVE-2026-84124",
+        "CVE-2026-84125",
+        "CVE-2026-84126",
+        "CVE-2026-84127",
+        "CVE-2026-84128",
+        "CVE-2026-84129",
+        "CVE-2026-84130",
+        "CVE-2026-84131",
+        "CVE-2026-84132",
+        "CVE-2026-84133",
+        "CVE-2026-84134",
+        "CVE-2026-84135",
+        "CVE-2026-84136",
+        "CVE-2026-84137",
+        "CVE-2026-84138",
+        "CVE-2026-84139",
+        "CVE-2026-84140",
+        "CVE-2026-84141",
+        "CVE-2026-84142",
+        "CVE-2026-84143",
+        "CVE-2026-84144",
+        "CVE-2026-84145"
+      ],
+      "advisories": [
+        "MFSA2026-82",
+        "MFSA2026-83",
+        "MFSA2026-84",
+        "MFSA2026-85"
+      ]
     }
   ],
   "annual": [
@@ -1824,9 +1851,9 @@
     },
     {
       "year": 2026,
-      "firefox_security_cves": 383,
+      "firefox_security_cves": 416,
       "partial_year": true,
-      "through_month": "2026-08"
+      "through_month": "2026-09"
     }
   ]
 }

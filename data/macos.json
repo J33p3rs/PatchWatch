@@ -2,21 +2,15 @@
   "metadata": {
     "vendor": "Apple",
     "platform": "macOS",
-    "generated": "2026-08-29",
+    "generated": "2026-09-06",
     "metric": "Unique CVEs documented in Apple security advisories for macOS releases in each calendar month",
     "metric_label": "macOS security CVEs",
     "source": "Apple security releases and linked security advisories",
     "source_url": "https://support.apple.com/en-us/100100",
-    "coverage": "2021-09 through 2026-08",
+    "coverage": "2021-10 through 2026-09",
     "methodology_note": "Counts unique CVE IDs across all Apple macOS security advisories released in the month. CVE IDs repeated across simultaneously supported macOS branches are counted once within the platform/month."
   },
   "monthly": [
-    {
-      "month": "2021-09",
-      "macos_security_cves": 0,
-      "apple_release_advisories": 0,
-      "cves": []
-    },
     {
       "month": "2021-10",
       "macos_security_cves": 71,
@@ -3343,6 +3337,12 @@
         "CVE-2026-65351",
         "CVE-2026-65400"
       ]
+    },
+    {
+      "month": "2026-09",
+      "macos_security_cves": 0,
+      "apple_release_advisories": 0,
+      "cves": []
     }
   ],
   "annual": [
@@ -3370,7 +3370,7 @@
       "year": 2026,
       "macos_security_cves": 512,
       "partial_year": true,
-      "through_month": "2026-08"
+      "through_month": "2026-09"
     }
   ]
 }

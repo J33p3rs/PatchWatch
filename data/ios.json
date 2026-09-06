@@ -2,77 +2,15 @@
   "metadata": {
     "vendor": "Apple",
     "platform": "iOS",
-    "generated": "2026-08-29",
+    "generated": "2026-09-06",
     "metric": "Unique CVEs documented in Apple security advisories for iOS releases in each calendar month",
     "metric_label": "iOS security CVEs",
     "source": "Apple security releases and linked security advisories",
     "source_url": "https://support.apple.com/en-us/100100",
-    "coverage": "2021-09 through 2026-08",
+    "coverage": "2021-10 through 2026-09",
     "methodology_note": "Counts unique CVE IDs across Apple security advisories whose release title includes iOS. Combined iOS/iPadOS advisories are included because they are Apple's normal iOS security advisory format; standalone iPadOS-only releases are not counted. Multiple iOS branches in one month are deduplicated by CVE ID."
   },
   "monthly": [
-    {
-      "month": "2021-09",
-      "ios_security_cves": 55,
-      "apple_release_advisories": 3,
-      "cves": [
-        "CVE-2013-0340",
-        "CVE-2021-30808",
-        "CVE-2021-30809",
-        "CVE-2021-30810",
-        "CVE-2021-30811",
-        "CVE-2021-30814",
-        "CVE-2021-30815",
-        "CVE-2021-30816",
-        "CVE-2021-30818",
-        "CVE-2021-30819",
-        "CVE-2021-30820",
-        "CVE-2021-30823",
-        "CVE-2021-30825",
-        "CVE-2021-30826",
-        "CVE-2021-30831",
-        "CVE-2021-30834",
-        "CVE-2021-30835",
-        "CVE-2021-30836",
-        "CVE-2021-30837",
-        "CVE-2021-30838",
-        "CVE-2021-30840",
-        "CVE-2021-30841",
-        "CVE-2021-30842",
-        "CVE-2021-30843",
-        "CVE-2021-30846",
-        "CVE-2021-30847",
-        "CVE-2021-30848",
-        "CVE-2021-30849",
-        "CVE-2021-30851",
-        "CVE-2021-30852",
-        "CVE-2021-30854",
-        "CVE-2021-30855",
-        "CVE-2021-30857",
-        "CVE-2021-30858",
-        "CVE-2021-30859",
-        "CVE-2021-30860",
-        "CVE-2021-30863",
-        "CVE-2021-30864",
-        "CVE-2021-30866",
-        "CVE-2021-30867",
-        "CVE-2021-30869",
-        "CVE-2021-30870",
-        "CVE-2021-30874",
-        "CVE-2021-30882",
-        "CVE-2021-30884",
-        "CVE-2021-30897",
-        "CVE-2021-30898",
-        "CVE-2021-30905",
-        "CVE-2021-30925",
-        "CVE-2021-30928",
-        "CVE-2021-30930",
-        "CVE-2021-31001",
-        "CVE-2021-31005",
-        "CVE-2021-31008",
-        "CVE-2021-31010"
-      ]
-    },
     {
       "month": "2021-10",
       "ios_security_cves": 30,
@@ -2275,6 +2213,12 @@
         "CVE-2026-65349",
         "CVE-2026-65351"
       ]
+    },
+    {
+      "month": "2026-09",
+      "ios_security_cves": 0,
+      "apple_release_advisories": 0,
+      "cves": []
     }
   ],
   "annual": [
@@ -2302,7 +2246,7 @@
       "year": 2026,
       "ios_security_cves": 472,
       "partial_year": true,
-      "through_month": "2026-08"
+      "through_month": "2026-09"
     }
   ]
 }
