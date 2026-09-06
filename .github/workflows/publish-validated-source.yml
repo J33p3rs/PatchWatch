@@ -146,6 +146,14 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
+      - name: Check exact candidate GitHub Action advisories
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          python public-repo/.github/scripts/check-patchwatch-action-advisories.py source
+
       - name: Verify forward-only source and classify changes
         id: gate
         shell: bash
