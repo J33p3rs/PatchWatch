@@ -9,8 +9,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-USES_KEY_RE = re.compile(r"^(?:-\s*)?uses:\s*")
-USES_RE = re.compile(r"^\s*(?:-\s*)?uses:\s*([^\s@#]+)@([0-9A-Fa-f]{40})(?:\s*(?:#.*)?)$")
+USES_KEY_RE = re.compile(r"^(?:-\s*)?(?:uses|['\"]uses['\"])\s*:\s*")
+USES_RE = re.compile(r"^\s*(?:-\s*)?(?:uses|['\"]uses['\"])\s*:\s*([^\s@#]+)@([0-9A-Fa-f]{40})(?:\s*(?:#.*)?)$")
+LOCAL_USES_RE = re.compile(r"^(?:-\s*)?(?:uses|['\"]uses['\"])\s*:\s*\./")
+DOCKER_USES_RE = re.compile(r"^(?:-\s*)?(?:uses|['\"]uses['\"])\s*:\s*docker://")
 SEMVER_TAG_RE = re.compile(r"^v?(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)$")
 
 
@@ -98,11 +100,11 @@ def discover_actions(source_root: Path) -> dict[str, str]:
             stripped = line.strip()
             if not USES_KEY_RE.match(stripped):
                 continue
-            if re.match(r"^(?:-\s*)?uses:\s*\./", stripped):
+            if LOCAL_USES_RE.match(stripped):
                 raise RuntimeError(
                     f"Local composite action reference requires explicit recursive scanner support: {path}:{lineno}: {stripped}"
                 )
-            if re.match(r"^(?:-\s*)?uses:\s*docker://", stripped):
+            if DOCKER_USES_RE.match(stripped):
                 raise RuntimeError(f"Docker action reference requires explicit scanner support: {path}:{lineno}")
             match = USES_RE.fullmatch(line)
             if not match:
