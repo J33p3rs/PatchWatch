@@ -145,6 +145,8 @@ jobs:
             exit 1
           fi
 
+          # The already-installed evaluator is the trust root. Candidate controller code
+          # never decides whether its own review evidence is clean.
           review_result="$(python "$installed_evaluator" \
             --sha "$SOURCE_SHA" \
             --reviews "$tmp/reviews.json" \
@@ -156,6 +158,8 @@ jobs:
             exit 1
           }
 
+          # Check the candidate controller's exact Action pins with the already-installed
+          # scanner before those candidate workflows can ever execute publicly.
           python "$installed_scanner" "$canonical"
 
           echo "changed=true" >> "$GITHUB_OUTPUT"
