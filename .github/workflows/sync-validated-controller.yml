@@ -1,0 +1,164 @@
+name: Patch Watch - Sync Validated Controller
+
+on:
+  schedule:
+    - cron: "12,42 * * * *"
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: patchwatch-controller-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    environment: patchwatch-production
+    steps:
+      - name: Validate GitHub App configuration
+        shell: bash
+        env:
+          SOURCE_CLIENT_ID: ${{ vars.PATCHWATCH_SOURCE_READER_CLIENT_ID }}
+          SOURCE_PRIVATE_KEY: ${{ secrets.PATCHWATCH_SOURCE_READER_PRIVATE_KEY }}
+          PUBLISHER_CLIENT_ID: ${{ vars.PATCHWATCH_PUBLISHER_CLIENT_ID }}
+          PUBLISHER_PRIVATE_KEY: ${{ secrets.PATCHWATCH_PUBLISHER_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          for name in SOURCE_CLIENT_ID SOURCE_PRIVATE_KEY PUBLISHER_CLIENT_ID PUBLISHER_PRIVATE_KEY; do
+            [[ -n "${!name:-}" ]] || { echo "Missing required GitHub App configuration: $name"; exit 1; }
+          done
+
+      - name: Create read-only source token
+        id: source-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.PATCHWATCH_SOURCE_READER_CLIENT_ID }}
+          private-key: ${{ secrets.PATCHWATCH_SOURCE_READER_PRIVATE_KEY }}
+          owner: J33p3rs
+          repositories: ai-learning-challenge
+          permission-actions: read
+          permission-contents: read
+          permission-pull-requests: read
+
+      - name: Resolve exact validated private main
+        id: source
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
+          TRUSTED_SECURITY_WORKFLOW_BLOB_SHA: 875701b614565f49d45527bef5cdcb91a2e13d93
+        run: |
+          set -euo pipefail
+          main_sha="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
+          validated_sha="$(gh api '/repos/J33p3rs/ai-learning-challenge/actions/workflows/patchwatch-security.yml/runs?branch=main&status=success&per_page=1' --jq '.workflow_runs[0].head_sha // empty')"
+          [[ "$main_sha" =~ ^[0-9a-f]{40}$ && "$validated_sha" == "$main_sha" ]] || {
+            echo "Private main does not yet have exact successful PatchWatch security evidence."
+            exit 1
+          }
+          validator_blob="$(gh api "/repos/J33p3rs/ai-learning-challenge/contents/.github/workflows/patchwatch-security.yml?ref=${main_sha}" --jq '.sha // empty')"
+          [[ "$validator_blob" == "$TRUSTED_SECURITY_WORKFLOW_BLOB_SHA" ]] || {
+            echo "Private candidate used an untrusted PatchWatch security workflow definition."
+            exit 1
+          }
+          echo "sha=$main_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Check out validated private controller source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: J33p3rs/ai-learning-challenge
+          ref: ${{ steps.source.outputs.sha }}
+          token: ${{ steps.source-token.outputs.token }}
+          path: source
+          persist-credentials: false
+          fetch-depth: 1
+
+      - name: Check out public main read-only
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: main
+          path: public-repo
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Require exact private Codex release evidence when controller differs
+        id: gate
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          set -euo pipefail
+          canonical='source/PatchWatch/public-controller'
+          [[ -f "$canonical/workflows/publish-validated-source.yml" ]]
+          [[ -f "$canonical/workflows/sync-validated-controller.yml" ]]
+          [[ -f "$canonical/scripts/check-patchwatch-action-advisories.py" ]]
+
+          changed=false
+          cmp -s "$canonical/workflows/publish-validated-source.yml" public-repo/.github/workflows/publish-validated-source.yml || changed=true
+          cmp -s "$canonical/workflows/sync-validated-controller.yml" public-repo/.github/workflows/sync-validated-controller.yml || changed=true
+          cmp -s "$canonical/scripts/check-patchwatch-action-advisories.py" public-repo/.github/scripts/check-patchwatch-action-advisories.py || changed=true
+          if [[ "$changed" != "true" ]]; then
+            echo "Controller already matches validated private source."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          current_source="$(git -C public-repo log --format=%s | grep -m1 -E '^Publish Patch Watch from [0-9a-f]{40}$' | sed -nE 's/^Publish Patch Watch from ([0-9a-f]{40})$/\1/p')"
+          [[ "$current_source" =~ ^[0-9a-f]{40}$ ]] || { echo "Could not resolve current production source marker."; exit 1; }
+
+          release_pr="$(gh api --paginate '/repos/J33p3rs/ai-learning-challenge/pulls?state=open&per_page=100' --jq ".[] | select((.head.ref | startswith(\"patchwatch-release-review-\")) and .head.sha == \"${SOURCE_SHA}\" and .base.sha == \"${current_source}\") | .number" | head -n1)"
+          [[ "$release_pr" =~ ^[0-9]+$ ]] || {
+            echo "No exact private release-review PR exists for controller source ${SOURCE_SHA}."
+            exit 1
+          }
+
+          exact_review="$(gh api "/repos/J33p3rs/ai-learning-challenge/pulls/${release_pr}/reviews?per_page=100" --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and .commit_id == \"${SOURCE_SHA}\") | .id" | tail -n1)"
+          short_sha="${SOURCE_SHA:0:10}"
+          clean_comment="$(gh api --paginate "/repos/J33p3rs/ai-learning-challenge/issues/${release_pr}/comments?per_page=100" --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and (.body | startswith(\"Codex Review: Didn't find any major issues.\")) and (.body | contains(\"**Reviewed commit:**\")) and (.body | contains(\"${short_sha}\"))) | .id" | tail -n1)"
+          [[ "$exact_review" =~ ^[0-9]+$ || "$clean_comment" =~ ^[0-9]+$ ]] || {
+            echo "Exact private Codex release evidence is not clean yet."
+            exit 1
+          }
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Create Publisher App token
+        if: steps.gate.outputs.changed == 'true'
+        id: publisher-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.PATCHWATCH_PUBLISHER_CLIENT_ID }}
+          private-key: ${{ secrets.PATCHWATCH_PUBLISHER_PRIVATE_KEY }}
+          owner: J33p3rs
+          repositories: PatchWatch
+          permission-contents: write
+
+      - name: Promote exact reviewed controller bundle
+        if: steps.gate.outputs.changed == 'true'
+        shell: bash
+        env:
+          PUBLISHER_TOKEN: ${{ steps.publisher-token.outputs.token }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          set -euo pipefail
+          canonical='source/PatchWatch/public-controller'
+          mkdir -p public-repo/.github/workflows public-repo/.github/scripts
+          cp "$canonical/workflows/publish-validated-source.yml" public-repo/.github/workflows/publish-validated-source.yml
+          cp "$canonical/workflows/sync-validated-controller.yml" public-repo/.github/workflows/sync-validated-controller.yml
+          cp "$canonical/scripts/check-patchwatch-action-advisories.py" public-repo/.github/scripts/check-patchwatch-action-advisories.py
+
+          git -C public-repo config user.name 'patchwatch-publisher[bot]'
+          git -C public-repo config user.email 'patchwatch-publisher@users.noreply.github.com'
+          git -C public-repo add .github/workflows/publish-validated-source.yml .github/workflows/sync-validated-controller.yml .github/scripts/check-patchwatch-action-advisories.py
+          git -C public-repo diff --cached --check
+          git -C public-repo commit -m "Sync Patch Watch controller from ${SOURCE_SHA}"
+          git -C public-repo remote set-url origin "https://x-access-token:${PUBLISHER_TOKEN}@github.com/J33p3rs/PatchWatch.git"
+          git -C public-repo push origin HEAD:main
+
+      - name: Dispatch publisher after controller promotion
+        if: steps.gate.outputs.changed == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run publish-validated-source.yml --repo J33p3rs/PatchWatch --ref main
