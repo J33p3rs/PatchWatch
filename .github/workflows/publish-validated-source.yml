@@ -146,13 +146,14 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: Check exact candidate GitHub Action advisories
+      - name: Check exact canonical controller GitHub Action advisories
         shell: bash
         env:
           GH_TOKEN: ${{ steps.source-token.outputs.token }}
         run: |
           set -euo pipefail
-          python public-repo/.github/scripts/check-patchwatch-action-advisories.py source
+          python source/PatchWatch/public-controller/scripts/check-patchwatch-action-advisories.py \
+            source/PatchWatch/public-controller
 
       - name: Verify forward-only source and classify changes
         id: gate
@@ -187,7 +188,7 @@ jobs:
             exit 1
           fi
 
-          jq -r '.files[].filename' <<<"$compare_json" > changed-files.txt
+          jq -r '.files[] | .filename, (.previous_filename // empty)' <<<"$compare_json" | sed '/^$/d' > changed-files.txt
 
           review_required=false
           while IFS= read -r path; do
@@ -206,7 +207,7 @@ jobs:
           echo "current_source=$current_source" >> "$GITHUB_OUTPUT"
           echo "review_required=$review_required" >> "$GITHUB_OUTPUT"
 
-      - name: Require exact-source Codex review evidence for substantive changes
+      - name: Require clean exact-source Codex review for substantive changes
         if: steps.gate.outputs.review_required == 'true'
         shell: bash
         env:
@@ -215,7 +216,6 @@ jobs:
           CURRENT_SOURCE: ${{ steps.gate.outputs.current_source }}
         run: |
           set -euo pipefail
-
           release_pr="$(
             gh api --paginate '/repos/J33p3rs/ai-learning-challenge/pulls?state=open&per_page=100' \
               --jq ".[] | select(((.head.ref == \"patchwatch-release-review\") or (.head.ref | startswith(\"patchwatch-release-review-\"))) and .head.sha == \"${SOURCE_SHA}\" and .base.sha == \"${CURRENT_SOURCE}\") | .number" |
@@ -226,29 +226,29 @@ jobs:
             exit 1
           }
 
-          evidence="$(
-            gh api "/repos/J33p3rs/ai-learning-challenge/pulls/${release_pr}/reviews" \
-              --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and .commit_id == \"${SOURCE_SHA}\") | .id" |
-              tail -n 1
-          )"
-          if [[ "$evidence" =~ ^[0-9]+$ ]]; then
-            echo "Codex review evidence found on release-review PR #${release_pr} for ${SOURCE_SHA}."
-            exit 0
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          gh api --paginate "/repos/J33p3rs/ai-learning-challenge/pulls/${release_pr}/reviews?per_page=100" --jq '.[]' | jq -s '.' > "$tmp/reviews.json"
+          gh api --paginate "/repos/J33p3rs/ai-learning-challenge/issues/${release_pr}/comments?per_page=100" --jq '.[]' | jq -s '.' > "$tmp/comments.json"
+          gh api graphql \
+            -f query='query($number:Int!){repository(owner:"J33p3rs",name:"ai-learning-challenge"){pullRequest(number:$number){reviewThreads(first:100){nodes{isResolved isOutdated comments(first:100){nodes{author{login} body} pageInfo{hasNextPage}}} pageInfo{hasNextPage}}}}}' \
+            -F number="$release_pr" > "$tmp/threads.json"
+          if [[ "$(jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage' "$tmp/threads.json")" == "true" ]] || \
+             [[ "$(jq '[.data.repository.pullRequest.reviewThreads.nodes[].comments.pageInfo.hasNextPage] | any' "$tmp/threads.json")" == "true" ]]; then
+            echo "Release review threads exceed safe evaluation bounds."
+            exit 1
           fi
-
-          short_sha="${SOURCE_SHA:0:10}"
-          clean_comment_id="$(
-            gh api "/repos/J33p3rs/ai-learning-challenge/issues/${release_pr}/comments?per_page=100" \
-              --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and (.body | startswith(\"Codex Review: Didn't find any major issues.\")) and (.body | contains(\"**Reviewed commit:**\")) and (.body | contains(\"${short_sha}\"))) | .id" |
-              tail -n 1
-          )"
-          if [[ "$clean_comment_id" =~ ^[0-9]+$ ]]; then
-            echo "Clean Codex review comment evidence found on release-review PR #${release_pr} for ${SOURCE_SHA}."
-            exit 0
+          review_result="$(python source/PatchWatch/public-controller/scripts/evaluate_codex_review.py \
+            --sha "$SOURCE_SHA" \
+            --reviews "$tmp/reviews.json" \
+            --threads "$tmp/threads.json" \
+            --comments "$tmp/comments.json")"
+          if [[ "$(jq -r '.state' <<<"$review_result")" != "clean" ]]; then
+            echo "Substantive Patch Watch changes require clean exact-source Codex review evidence tied to ${SOURCE_SHA}."
+            echo "$review_result"
+            exit 1
           fi
-
-          echo "Substantive Patch Watch changes require Codex review evidence tied to exact source ${SOURCE_SHA}."
-          exit 1
+          echo "Clean exact-source Codex review confirmed on release-review PR #${release_pr}."
 
       - name: Verify committed Monthly Notes match source data
         shell: bash
