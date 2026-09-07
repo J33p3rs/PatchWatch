@@ -43,12 +43,11 @@ jobs:
           permission-contents: read
           permission-pull-requests: read
 
-      - name: Resolve exact validated private main
+      - name: Resolve exact successful private main
         id: source
         shell: bash
         env:
           GH_TOKEN: ${{ steps.source-token.outputs.token }}
-          TRUSTED_SECURITY_WORKFLOW_BLOB_SHA: 875701b614565f49d45527bef5cdcb91a2e13d93
         run: |
           set -euo pipefail
           main_sha="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
@@ -58,11 +57,6 @@ jobs:
           run_conclusion="$(jq -r '.conclusion // empty' <<<"$latest_run")"
           [[ "$main_sha" =~ ^[0-9a-f]{40}$ && "$validated_sha" == "$main_sha" && "$run_status" == "completed" && "$run_conclusion" == "success" ]] || {
             echo "Latest PatchWatch security run is not a successful exact-main validation."
-            exit 1
-          }
-          validator_blob="$(gh api "/repos/J33p3rs/ai-learning-challenge/contents/.github/workflows/patchwatch-security.yml?ref=${main_sha}" --jq '.sha // empty')"
-          [[ "$validator_blob" == "$TRUSTED_SECURITY_WORKFLOW_BLOB_SHA" ]] || {
-            echo "Private candidate used an untrusted PatchWatch security workflow definition."
             exit 1
           }
           echo "sha=$main_sha" >> "$GITHUB_OUTPUT"
@@ -85,7 +79,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: Require clean exact private Codex release evidence when controller differs
+      - name: Require installed trust anchors and clean exact private release evidence
         id: gate
         shell: bash
         env:
@@ -94,18 +88,37 @@ jobs:
         run: |
           set -euo pipefail
           canonical='source/PatchWatch/public-controller'
-          [[ -f "$canonical/workflows/publish-validated-source.yml" ]]
-          [[ -f "$canonical/workflows/sync-validated-controller.yml" ]]
-          [[ -f "$canonical/scripts/check-patchwatch-action-advisories.py" ]]
-          [[ -f "$canonical/scripts/evaluate_codex_review.py" ]]
+          trusted_state='public-repo/.github/trusted-security-workflow-blob'
+          installed_evaluator='public-repo/.github/scripts/evaluate_codex_review.py'
+          installed_scanner='public-repo/.github/scripts/check-patchwatch-action-advisories.py'
 
-          changed=false
-          cmp -s "$canonical/workflows/publish-validated-source.yml" public-repo/.github/workflows/publish-validated-source.yml || changed=true
-          cmp -s "$canonical/workflows/sync-validated-controller.yml" public-repo/.github/workflows/sync-validated-controller.yml || changed=true
-          cmp -s "$canonical/scripts/check-patchwatch-action-advisories.py" public-repo/.github/scripts/check-patchwatch-action-advisories.py || changed=true
-          cmp -s "$canonical/scripts/evaluate_codex_review.py" public-repo/.github/scripts/evaluate_codex_review.py || changed=true
-          if [[ "$changed" != "true" ]]; then
-            echo "Controller already matches validated private source."
+          for path in \
+            "$canonical/workflows/publish-validated-source.yml" \
+            "$canonical/workflows/sync-validated-controller.yml" \
+            "$canonical/scripts/check-patchwatch-action-advisories.py" \
+            "$canonical/scripts/evaluate_codex_review.py" \
+            "$installed_evaluator" \
+            "$installed_scanner" \
+            "$trusted_state"; do
+            [[ -f "$path" ]] || { echo "Missing required controller trust artefact: $path"; exit 1; }
+          done
+
+          trusted_blob="$(tr -d '\r\n' < "$trusted_state")"
+          candidate_blob="$(git -C source rev-parse 'HEAD:.github/workflows/patchwatch-security.yml')"
+          [[ "$trusted_blob" =~ ^[0-9a-f]{40}$ && "$candidate_blob" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "Invalid security-workflow trust state."; exit 1;
+          }
+
+          controller_changed=false
+          cmp -s "$canonical/workflows/publish-validated-source.yml" public-repo/.github/workflows/publish-validated-source.yml || controller_changed=true
+          cmp -s "$canonical/workflows/sync-validated-controller.yml" public-repo/.github/workflows/sync-validated-controller.yml || controller_changed=true
+          cmp -s "$canonical/scripts/check-patchwatch-action-advisories.py" "$installed_scanner" || controller_changed=true
+          cmp -s "$canonical/scripts/evaluate_codex_review.py" "$installed_evaluator" || controller_changed=true
+          trust_rotation=false
+          [[ "$candidate_blob" == "$trusted_blob" ]] || trust_rotation=true
+
+          if [[ "$controller_changed" != "true" && "$trust_rotation" != "true" ]]; then
+            echo "Controller and security-workflow trust state already match validated private source."
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -115,7 +128,7 @@ jobs:
 
           release_pr="$(gh api --paginate '/repos/J33p3rs/ai-learning-challenge/pulls?state=open&per_page=100' --jq ".[] | select((.head.ref | startswith(\"patchwatch-release-review-\")) and .head.sha == \"${SOURCE_SHA}\" and .base.sha == \"${current_source}\") | .number" | head -n1)"
           [[ "$release_pr" =~ ^[0-9]+$ ]] || {
-            echo "No exact private release-review PR exists for controller source ${SOURCE_SHA}."
+            echo "No exact private release-review PR exists for source ${SOURCE_SHA} and production ${current_source}."
             exit 1
           }
 
@@ -132,7 +145,7 @@ jobs:
             exit 1
           fi
 
-          review_result="$(python "$canonical/scripts/evaluate_codex_review.py" \
+          review_result="$(python "$installed_evaluator" \
             --sha "$SOURCE_SHA" \
             --reviews "$tmp/reviews.json" \
             --threads "$tmp/threads.json" \
@@ -142,7 +155,12 @@ jobs:
             echo "$review_result"
             exit 1
           }
+
+          python "$installed_scanner" "$canonical"
+
           echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "candidate_blob=$candidate_blob" >> "$GITHUB_OUTPUT"
+          echo "trust_rotation=$trust_rotation" >> "$GITHUB_OUTPUT"
 
       - name: Revalidate exact private main before write capability
         if: steps.gate.outputs.changed == 'true'
@@ -169,12 +187,13 @@ jobs:
           repositories: PatchWatch
           permission-contents: write
 
-      - name: Promote exact reviewed controller bundle
+      - name: Promote exact reviewed controller bundle and trust state
         if: steps.gate.outputs.changed == 'true'
         shell: bash
         env:
           PUBLISHER_TOKEN: ${{ steps.publisher-token.outputs.token }}
           SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          CANDIDATE_SECURITY_BLOB: ${{ steps.gate.outputs.candidate_blob }}
         run: |
           set -euo pipefail
           canonical='source/PatchWatch/public-controller'
@@ -183,6 +202,7 @@ jobs:
           cp "$canonical/workflows/sync-validated-controller.yml" public-repo/.github/workflows/sync-validated-controller.yml
           cp "$canonical/scripts/check-patchwatch-action-advisories.py" public-repo/.github/scripts/check-patchwatch-action-advisories.py
           cp "$canonical/scripts/evaluate_codex_review.py" public-repo/.github/scripts/evaluate_codex_review.py
+          printf '%s\n' "$CANDIDATE_SECURITY_BLOB" > public-repo/.github/trusted-security-workflow-blob
 
           git -C public-repo config user.name 'patchwatch-publisher[bot]'
           git -C public-repo config user.email 'patchwatch-publisher@users.noreply.github.com'
@@ -190,7 +210,8 @@ jobs:
             .github/workflows/publish-validated-source.yml \
             .github/workflows/sync-validated-controller.yml \
             .github/scripts/check-patchwatch-action-advisories.py \
-            .github/scripts/evaluate_codex_review.py
+            .github/scripts/evaluate_codex_review.py \
+            .github/trusted-security-workflow-blob
           git -C public-repo diff --cached --check
           git -C public-repo commit -m "Sync Patch Watch controller from ${SOURCE_SHA}"
           git -C public-repo remote set-url origin "https://x-access-token:${PUBLISHER_TOKEN}@github.com/J33p3rs/PatchWatch.git"
