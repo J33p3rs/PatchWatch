@@ -52,9 +52,12 @@ jobs:
         run: |
           set -euo pipefail
           main_sha="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
-          validated_sha="$(gh api '/repos/J33p3rs/ai-learning-challenge/actions/workflows/patchwatch-security.yml/runs?branch=main&status=success&per_page=1' --jq '.workflow_runs[0].head_sha // empty')"
-          [[ "$main_sha" =~ ^[0-9a-f]{40}$ && "$validated_sha" == "$main_sha" ]] || {
-            echo "Private main does not yet have exact successful PatchWatch security evidence."
+          latest_run="$(gh api '/repos/J33p3rs/ai-learning-challenge/actions/workflows/patchwatch-security.yml/runs?branch=main&per_page=1' --jq '.workflow_runs[0] // empty')"
+          validated_sha="$(jq -r '.head_sha // empty' <<<"$latest_run")"
+          run_status="$(jq -r '.status // empty' <<<"$latest_run")"
+          run_conclusion="$(jq -r '.conclusion // empty' <<<"$latest_run")"
+          [[ "$main_sha" =~ ^[0-9a-f]{40}$ && "$validated_sha" == "$main_sha" && "$run_status" == "completed" && "$run_conclusion" == "success" ]] || {
+            echo "Latest PatchWatch security run is not a successful exact-main validation."
             exit 1
           }
           validator_blob="$(gh api "/repos/J33p3rs/ai-learning-challenge/contents/.github/workflows/patchwatch-security.yml?ref=${main_sha}" --jq '.sha // empty')"
@@ -82,7 +85,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: Require exact private Codex release evidence when controller differs
+      - name: Require clean exact private Codex release evidence when controller differs
         id: gate
         shell: bash
         env:
@@ -94,6 +97,7 @@ jobs:
           [[ -f "$canonical/workflows/publish-validated-source.yml" ]]
           [[ -f "$canonical/workflows/sync-validated-controller.yml" ]]
           [[ -f "$canonical/scripts/check-patchwatch-action-advisories.py" ]]
+          [[ -f source/PatchWatch/scripts/evaluate_codex_review.py ]]
 
           changed=false
           cmp -s "$canonical/workflows/publish-validated-source.yml" public-repo/.github/workflows/publish-validated-source.yml || changed=true
@@ -114,14 +118,44 @@ jobs:
             exit 1
           }
 
-          exact_review="$(gh api "/repos/J33p3rs/ai-learning-challenge/pulls/${release_pr}/reviews?per_page=100" --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and .commit_id == \"${SOURCE_SHA}\") | .id" | tail -n1)"
-          short_sha="${SOURCE_SHA:0:10}"
-          clean_comment="$(gh api --paginate "/repos/J33p3rs/ai-learning-challenge/issues/${release_pr}/comments?per_page=100" --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and (.body | startswith(\"Codex Review: Didn't find any major issues.\")) and (.body | contains(\"**Reviewed commit:**\")) and (.body | contains(\"${short_sha}\"))) | .id" | tail -n1)"
-          [[ "$exact_review" =~ ^[0-9]+$ || "$clean_comment" =~ ^[0-9]+$ ]] || {
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          gh api --paginate "/repos/J33p3rs/ai-learning-challenge/pulls/${release_pr}/reviews?per_page=100" --jq '.[]' | jq -s '.' > "$tmp/reviews.json"
+          gh api --paginate "/repos/J33p3rs/ai-learning-challenge/issues/${release_pr}/comments?per_page=100" --jq '.[]' | jq -s '.' > "$tmp/comments.json"
+          gh api graphql \
+            -f query='query($number:Int!){repository(owner:"J33p3rs",name:"ai-learning-challenge"){pullRequest(number:$number){reviewThreads(first:100){nodes{isResolved isOutdated comments(first:100){nodes{author{login} body} pageInfo{hasNextPage}}} pageInfo{hasNextPage}}}}}' \
+            -F number="$release_pr" > "$tmp/threads.json"
+          if [[ "$(jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage' "$tmp/threads.json")" == "true" ]] || \
+             [[ "$(jq '[.data.repository.pullRequest.reviewThreads.nodes[].comments.pageInfo.hasNextPage] | any' "$tmp/threads.json")" == "true" ]]; then
+            echo "Release review threads exceed safe evaluation bounds."
+            exit 1
+          fi
+
+          review_result="$(python source/PatchWatch/scripts/evaluate_codex_review.py \
+            --sha "$SOURCE_SHA" \
+            --reviews "$tmp/reviews.json" \
+            --threads "$tmp/threads.json" \
+            --comments "$tmp/comments.json")"
+          [[ "$(jq -r '.state' <<<"$review_result")" == "clean" ]] || {
             echo "Exact private Codex release evidence is not clean yet."
+            echo "$review_result"
             exit 1
           }
           echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Revalidate exact private main before write capability
+        if: steps.gate.outputs.changed == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          set -euo pipefail
+          current_main="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
+          [[ "$current_main" == "$SOURCE_SHA" ]] || {
+            echo "Private main advanced after review validation; refusing stale controller promotion."
+            exit 1
+          }
 
       - name: Create Publisher App token
         if: steps.gate.outputs.changed == 'true'
