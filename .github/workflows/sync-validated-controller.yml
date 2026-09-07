@@ -98,7 +98,6 @@ jobs:
           [[ -f "$canonical/workflows/sync-validated-controller.yml" ]]
           [[ -f "$canonical/scripts/check-patchwatch-action-advisories.py" ]]
           [[ -f "$canonical/scripts/evaluate_codex_review.py" ]]
-          [[ -f public-repo/.github/scripts/evaluate_codex_review.py ]]
 
           changed=false
           cmp -s "$canonical/workflows/publish-validated-source.yml" public-repo/.github/workflows/publish-validated-source.yml || changed=true
@@ -133,7 +132,7 @@ jobs:
             exit 1
           fi
 
-          review_result="$(python public-repo/.github/scripts/evaluate_codex_review.py \
+          review_result="$(python "$canonical/scripts/evaluate_codex_review.py" \
             --sha "$SOURCE_SHA" \
             --reviews "$tmp/reviews.json" \
             --threads "$tmp/threads.json" \
