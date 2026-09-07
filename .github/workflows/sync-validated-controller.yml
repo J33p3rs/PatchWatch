@@ -97,12 +97,14 @@ jobs:
           [[ -f "$canonical/workflows/publish-validated-source.yml" ]]
           [[ -f "$canonical/workflows/sync-validated-controller.yml" ]]
           [[ -f "$canonical/scripts/check-patchwatch-action-advisories.py" ]]
-          [[ -f source/PatchWatch/scripts/evaluate_codex_review.py ]]
+          [[ -f "$canonical/scripts/evaluate_codex_review.py" ]]
+          [[ -f public-repo/.github/scripts/evaluate_codex_review.py ]]
 
           changed=false
           cmp -s "$canonical/workflows/publish-validated-source.yml" public-repo/.github/workflows/publish-validated-source.yml || changed=true
           cmp -s "$canonical/workflows/sync-validated-controller.yml" public-repo/.github/workflows/sync-validated-controller.yml || changed=true
           cmp -s "$canonical/scripts/check-patchwatch-action-advisories.py" public-repo/.github/scripts/check-patchwatch-action-advisories.py || changed=true
+          cmp -s "$canonical/scripts/evaluate_codex_review.py" public-repo/.github/scripts/evaluate_codex_review.py || changed=true
           if [[ "$changed" != "true" ]]; then
             echo "Controller already matches validated private source."
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -131,7 +133,7 @@ jobs:
             exit 1
           fi
 
-          review_result="$(python source/PatchWatch/scripts/evaluate_codex_review.py \
+          review_result="$(python public-repo/.github/scripts/evaluate_codex_review.py \
             --sha "$SOURCE_SHA" \
             --reviews "$tmp/reviews.json" \
             --threads "$tmp/threads.json" \
@@ -181,10 +183,15 @@ jobs:
           cp "$canonical/workflows/publish-validated-source.yml" public-repo/.github/workflows/publish-validated-source.yml
           cp "$canonical/workflows/sync-validated-controller.yml" public-repo/.github/workflows/sync-validated-controller.yml
           cp "$canonical/scripts/check-patchwatch-action-advisories.py" public-repo/.github/scripts/check-patchwatch-action-advisories.py
+          cp "$canonical/scripts/evaluate_codex_review.py" public-repo/.github/scripts/evaluate_codex_review.py
 
           git -C public-repo config user.name 'patchwatch-publisher[bot]'
           git -C public-repo config user.email 'patchwatch-publisher@users.noreply.github.com'
-          git -C public-repo add .github/workflows/publish-validated-source.yml .github/workflows/sync-validated-controller.yml .github/scripts/check-patchwatch-action-advisories.py
+          git -C public-repo add \
+            .github/workflows/publish-validated-source.yml \
+            .github/workflows/sync-validated-controller.yml \
+            .github/scripts/check-patchwatch-action-advisories.py \
+            .github/scripts/evaluate_codex_review.py
           git -C public-repo diff --cached --check
           git -C public-repo commit -m "Sync Patch Watch controller from ${SOURCE_SHA}"
           git -C public-repo remote set-url origin "https://x-access-token:${PUBLISHER_TOKEN}@github.com/J33p3rs/PatchWatch.git"
