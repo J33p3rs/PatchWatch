@@ -142,6 +142,8 @@ jobs:
           GH_TOKEN: ${{ steps.source-token.outputs.token }}
         run: |
           set -euo pipefail
+          # Use the already-installed public scanner as the trust root. Candidate scanner
+          # changes cannot approve their own Action dependency set.
           python public-repo/.github/scripts/check-patchwatch-action-advisories.py \
             source/PatchWatch/public-controller
 
