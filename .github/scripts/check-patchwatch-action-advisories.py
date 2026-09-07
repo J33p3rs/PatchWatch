@@ -9,6 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+USES_KEY_RE = re.compile(r"^(?:-\s*)?uses:\s*")
 USES_RE = re.compile(r"^\s*(?:-\s*)?uses:\s*([^\s@#]+)@([0-9A-Fa-f]{40})(?:\s*(?:#.*)?)$")
 SEMVER_TAG_RE = re.compile(r"^v?(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)$")
 
@@ -79,16 +80,23 @@ def advisories(repository: str, version: str, severity: str) -> list[dict]:
     return [item for item in payload if item.get("withdrawn_at") is None]
 
 
-def discover_actions(source_root: Path) -> dict[str, str]:
-    workflows = source_root / ".github" / "workflows"
-    if not workflows.is_dir():
-        raise RuntimeError(f"Missing workflow directory: {workflows}")
+def workflow_directory(source_root: Path) -> Path:
+    normal = source_root / ".github" / "workflows"
+    canonical = source_root / "workflows"
+    if normal.is_dir():
+        return normal
+    if canonical.is_dir():
+        return canonical
+    raise RuntimeError(f"Missing workflow directory below: {source_root}")
 
+
+def discover_actions(source_root: Path) -> dict[str, str]:
+    workflows = workflow_directory(source_root)
     actions: dict[str, str] = {}
     for path in sorted([*workflows.glob("*.yml"), *workflows.glob("*.yaml")]):
         for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
             stripped = line.strip()
-            if "uses:" not in stripped:
+            if not USES_KEY_RE.match(stripped):
                 continue
             if re.match(r"^(?:-\s*)?uses:\s*\./", stripped):
                 raise RuntimeError(
@@ -109,7 +117,7 @@ def discover_actions(source_root: Path) -> dict[str, str]:
                 raise RuntimeError(f"Action repository {repository} is pinned to multiple SHAs in the candidate")
             actions[repository] = sha.lower()
     if not actions:
-        raise RuntimeError("No external GitHub Actions found in PatchWatch source workflows")
+        raise RuntimeError(f"No external GitHub Actions found under {workflows}")
     return actions
 
 
