@@ -18,6 +18,28 @@ jobs:
     environment: patchwatch-production
 
     steps:
+      - name: Preflight installed controller Action advisories before App secrets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EXECUTING_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "$EXECUTING_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid executing workflow SHA."; exit 1; }
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          mkdir -p "$tmp/.github/workflows" "$tmp/.github/scripts"
+          for path in \
+            .github/workflows/publish-validated-source.yml \
+            .github/workflows/sync-validated-controller.yml \
+            .github/scripts/check-patchwatch-action-advisories.py; do
+            encoded="$(gh api "/repos/${REPO}/contents/${path}?ref=${EXECUTING_SHA}" --jq '.content // empty')"
+            [[ -n "$encoded" ]] || { echo "Could not load installed trust artefact: $path"; exit 1; }
+            printf '%s' "$encoded" | tr -d '\n' | base64 --decode > "$tmp/$path"
+          done
+          python "$tmp/.github/scripts/check-patchwatch-action-advisories.py" "$tmp"
+
       - name: Validate GitHub App configuration
         shell: bash
         env:
@@ -56,18 +78,15 @@ jobs:
           GH_TOKEN: ${{ steps.source-token.outputs.token }}
         run: |
           set -euo pipefail
-          source_sha="$(
-            gh api \
-              '/repos/J33p3rs/ai-learning-challenge/actions/workflows/patchwatch-security.yml/runs?branch=main&status=success&per_page=1' \
-              --jq '.workflow_runs[0].head_sha // empty'
-          )"
-          [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]] || { echo "Could not resolve latest successful Patch Watch source SHA."; exit 1; }
           main_sha="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
-          [[ "$main_sha" =~ ^[0-9a-f]{40}$ ]] || { echo "Could not resolve private main SHA."; exit 1; }
-          if [[ "$source_sha" != "$main_sha" ]]; then
-            echo "Latest successful Patch Watch source is not current private main; waiting for exact-main security validation."
+          latest_run="$(gh api '/repos/J33p3rs/ai-learning-challenge/actions/workflows/patchwatch-security.yml/runs?branch=main&per_page=1' --jq '.workflow_runs[0] // empty')"
+          source_sha="$(jq -r '.head_sha // empty' <<<"$latest_run")"
+          run_status="$(jq -r '.status // empty' <<<"$latest_run")"
+          run_conclusion="$(jq -r '.conclusion // empty' <<<"$latest_run")"
+          [[ "$main_sha" =~ ^[0-9a-f]{40}$ && "$source_sha" == "$main_sha" && "$run_status" == "completed" && "$run_conclusion" == "success" ]] || {
+            echo "Latest Patch Watch security run is not a successful exact-main validation."
             exit 1
-          fi
+          }
           echo "sha=$source_sha" >> "$GITHUB_OUTPUT"
           echo "main_sha=$main_sha" >> "$GITHUB_OUTPUT"
 
@@ -133,6 +152,28 @@ jobs:
             echo "Private security workflow has not yet been promoted through the trusted controller sync."
             echo "Trusted:   $trusted_blob"
             echo "Candidate: $candidate_blob"
+            exit 1
+          }
+
+      - name: Require synchronised public controller before site publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          canonical='source/PatchWatch/public-controller'
+          cmp -s "$canonical/workflows/publish-validated-source.yml" public-repo/.github/workflows/publish-validated-source.yml || {
+            echo "Public publisher controller is not synchronised with validated private source; controller sync must complete before site publication."
+            exit 1
+          }
+          cmp -s "$canonical/workflows/sync-validated-controller.yml" public-repo/.github/workflows/sync-validated-controller.yml || {
+            echo "Public sync controller is not synchronised with validated private source; controller sync must complete before site publication."
+            exit 1
+          }
+          cmp -s "$canonical/scripts/check-patchwatch-action-advisories.py" public-repo/.github/scripts/check-patchwatch-action-advisories.py || {
+            echo "Public advisory scanner is not synchronised with validated private source; controller sync must complete before site publication."
+            exit 1
+          }
+          cmp -s "$canonical/scripts/evaluate_codex_review.py" public-repo/.github/scripts/evaluate_codex_review.py || {
+            echo "Public review evaluator is not synchronised with validated private source; controller sync must complete before site publication."
             exit 1
           }
 

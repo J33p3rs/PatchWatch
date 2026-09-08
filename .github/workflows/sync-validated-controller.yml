@@ -18,6 +18,28 @@ jobs:
     runs-on: ubuntu-latest
     environment: patchwatch-production
     steps:
+      - name: Preflight installed controller Action advisories before App secrets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EXECUTING_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "$EXECUTING_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid executing workflow SHA."; exit 1; }
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          mkdir -p "$tmp/.github/workflows" "$tmp/.github/scripts"
+          for path in \
+            .github/workflows/publish-validated-source.yml \
+            .github/workflows/sync-validated-controller.yml \
+            .github/scripts/check-patchwatch-action-advisories.py; do
+            encoded="$(gh api "/repos/${REPO}/contents/${path}?ref=${EXECUTING_SHA}" --jq '.content // empty')"
+            [[ -n "$encoded" ]] || { echo "Could not load installed trust artefact: $path"; exit 1; }
+            printf '%s' "$encoded" | tr -d '\n' | base64 --decode > "$tmp/$path"
+          done
+          python "$tmp/.github/scripts/check-patchwatch-action-advisories.py" "$tmp"
+
       - name: Validate GitHub App configuration
         shell: bash
         env:
@@ -69,7 +91,7 @@ jobs:
           token: ${{ steps.source-token.outputs.token }}
           path: source
           persist-credentials: false
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Check out public main read-only
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -123,12 +145,77 @@ jobs:
             exit 0
           fi
 
-          current_source="$(git -C public-repo log --format=%s | grep -m1 -E '^Publish Patch Watch from [0-9a-f]{40}$' | sed -nE 's/^Publish Patch Watch from ([0-9a-f]{40})$/\1/p')"
-          [[ "$current_source" =~ ^[0-9a-f]{40}$ ]] || { echo "Could not resolve current production source marker."; exit 1; }
+          mapfile -t published_sources < <(
+            git -C public-repo log --format=%s |
+              sed -nE 's/^Publish Patch Watch from ([0-9a-f]{40})$/\1/p' |
+              awk '!seen[$0]++'
+          )
+          (( ${#published_sources[@]} > 0 )) || { echo "Could not resolve current production source marker."; exit 1; }
+          current_source="${published_sources[0]}"
+          [[ "$current_source" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid current production source marker."; exit 1; }
 
-          release_pr="$(gh api --paginate '/repos/J33p3rs/ai-learning-challenge/pulls?state=open&per_page=100' --jq ".[] | select((.head.ref | startswith(\"patchwatch-release-review-\")) and .head.sha == \"${SOURCE_SHA}\" and .base.sha == \"${current_source}\") | .number" | head -n1)"
-          [[ "$release_pr" =~ ^[0-9]+$ ]] || {
-            echo "No exact private release-review PR exists for source ${SOURCE_SHA} and production ${current_source}."
+          # Review evidence follows trust-relevant controller content, not later data-only
+          # source movement. If the current public source already has the same canonical
+          # controller/security-trust content as validated private main, walk backwards
+          # through distinct published source markers to the earliest contiguous source
+          # with that same content. Its immediately preceding marker is the exact review
+          # baseline that authorised the controller bundle. If the current public source
+          # differs in trust-relevant content, the current private SOURCE_SHA itself needs
+          # a fresh review against current production.
+          trust_paths=(PatchWatch/public-controller .github/workflows/patchwatch-security.yml)
+          review_candidate="$SOURCE_SHA"
+          reviewed_base="$current_source"
+          if git -C source cat-file -e "${current_source}^{commit}" 2>/dev/null && \
+             git -C source diff --quiet "$current_source" "$SOURCE_SHA" -- "${trust_paths[@]}"; then
+            review_candidate="$current_source"
+            reviewed_base=""
+            for ((i=1; i<${#published_sources[@]}; i++)); do
+              marker="${published_sources[$i]}"
+              [[ "$marker" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid historical production marker."; exit 1; }
+              git -C source cat-file -e "${marker}^{commit}" 2>/dev/null || {
+                echo "Published source ${marker} is unavailable in validated private history."
+                exit 1
+              }
+              if git -C source diff --quiet "$marker" "$SOURCE_SHA" -- "${trust_paths[@]}"; then
+                review_candidate="$marker"
+                continue
+              fi
+              reviewed_base="$marker"
+              break
+            done
+          fi
+
+          [[ "$review_candidate" =~ ^[0-9a-f]{40}$ && "$reviewed_base" =~ ^[0-9a-f]{40}$ && "$review_candidate" != "$reviewed_base" ]] || {
+            echo "Could not resolve an exact reviewed controller candidate/baseline pair."
+            exit 1
+          }
+          git -C source merge-base --is-ancestor "$review_candidate" "$SOURCE_SHA" || {
+            echo "Reviewed controller candidate is not an ancestor of validated private main."
+            exit 1
+          }
+          git -C source merge-base --is-ancestor "$reviewed_base" "$review_candidate" || {
+            echo "Reviewed controller baseline is not an ancestor of its candidate."
+            exit 1
+          }
+          git -C source diff --quiet "$review_candidate" "$SOURCE_SHA" -- "${trust_paths[@]}" || {
+            echo "Reviewed candidate does not match current trust-relevant controller content."
+            exit 1
+          }
+
+          release_pr_json="$(
+            gh api --paginate '/repos/J33p3rs/ai-learning-challenge/pulls?state=open&per_page=100' \
+              --jq ".[] | select((.head.ref | startswith(\"patchwatch-release-review-\")) and .head.sha == \"${review_candidate}\" and .base.sha == \"${reviewed_base}\")" |
+              jq -s 'if length == 1 then .[0] else empty end'
+          )"
+          [[ -n "$release_pr_json" ]] || {
+            echo "Expected exactly one open release-review PR for baseline ${reviewed_base} and controller candidate ${review_candidate}."
+            exit 1
+          }
+          release_pr="$(jq -r '.number // empty' <<<"$release_pr_json")"
+          pr_reviewed_base="$(jq -r '.base.sha // empty' <<<"$release_pr_json")"
+          pr_reviewed_head="$(jq -r '.head.sha // empty' <<<"$release_pr_json")"
+          [[ "$release_pr" =~ ^[0-9]+$ && "$pr_reviewed_base" == "$reviewed_base" && "$pr_reviewed_head" == "$review_candidate" ]] || {
+            echo "Release-review PR does not contain the required reviewed controller pair."
             exit 1
           }
 
@@ -148,12 +235,12 @@ jobs:
           # The already-installed evaluator is the trust root. Candidate controller code
           # never decides whether its own review evidence is clean.
           review_result="$(python "$installed_evaluator" \
-            --sha "$SOURCE_SHA" \
+            --sha "$review_candidate" \
             --reviews "$tmp/reviews.json" \
             --threads "$tmp/threads.json" \
             --comments "$tmp/comments.json")"
           [[ "$(jq -r '.state' <<<"$review_result")" == "clean" ]] || {
-            echo "Exact private Codex release evidence is not clean yet."
+            echo "Exact private Codex controller review evidence is not clean yet."
             echo "$review_result"
             exit 1
           }
@@ -165,6 +252,7 @@ jobs:
           echo "changed=true" >> "$GITHUB_OUTPUT"
           echo "candidate_blob=$candidate_blob" >> "$GITHUB_OUTPUT"
           echo "trust_rotation=$trust_rotation" >> "$GITHUB_OUTPUT"
+          echo "review_candidate=$review_candidate" >> "$GITHUB_OUTPUT"
 
       - name: Revalidate exact private main before write capability
         if: steps.gate.outputs.changed == 'true'
@@ -197,6 +285,7 @@ jobs:
         env:
           PUBLISHER_TOKEN: ${{ steps.publisher-token.outputs.token }}
           SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          REVIEW_CANDIDATE: ${{ steps.gate.outputs.review_candidate }}
           CANDIDATE_SECURITY_BLOB: ${{ steps.gate.outputs.candidate_blob }}
         run: |
           set -euo pipefail
@@ -217,7 +306,7 @@ jobs:
             .github/scripts/evaluate_codex_review.py \
             .github/trusted-security-workflow-blob
           git -C public-repo diff --cached --check
-          git -C public-repo commit -m "Sync Patch Watch controller from ${SOURCE_SHA}"
+          git -C public-repo commit -m "Sync Patch Watch controller from ${SOURCE_SHA} (reviewed ${REVIEW_CANDIDATE})"
           git -C public-repo remote set-url origin "https://x-access-token:${PUBLISHER_TOKEN}@github.com/J33p3rs/PatchWatch.git"
           git -C public-repo push origin HEAD:main
 

@@ -15,6 +15,64 @@ LOCAL_USES_RE = re.compile(r"^(?:-\s*)?(?:uses|['\"]uses['\"])\s*:\s*\./")
 DOCKER_USES_RE = re.compile(r"^(?:-\s*)?(?:uses|['\"]uses['\"])\s*:\s*docker://")
 SEMVER_TAG_RE = re.compile(r"^v?(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)$")
 
+RUBY_YAML_USES = r'''
+require "json"
+require "psych"
+
+found = []
+walk = lambda do |node|
+  case node
+  when Psych::Nodes::Mapping
+    children = node.children
+    (0...children.length).step(2) do |index|
+      key = children[index]
+      value = children[index + 1]
+      if key.is_a?(Psych::Nodes::Scalar) && key.value == "uses"
+        unless value.is_a?(Psych::Nodes::Scalar)
+          raise "uses value must be a scalar"
+        end
+        found << {"line" => key.start_line + 1, "value" => value.value}
+      end
+      walk.call(key)
+      walk.call(value)
+    end
+  when Psych::Nodes::Sequence, Psych::Nodes::Document, Psych::Nodes::Stream
+    node.children.each { |child| walk.call(child) }
+  end
+end
+
+stream = Psych.parse_stream(File.read(ARGV.fetch(0)))
+walk.call(stream)
+puts JSON.generate(found)
+'''
+
+
+def structural_uses(path: Path) -> list[dict[str, object]]:
+    """Return decoded YAML `uses` mapping keys using Ruby's standard Psych parser.
+
+    Structural parsing is the trust boundary. Source-line regexes below are used
+    only to enforce the deliberately narrow, rewriteable simple block syntax.
+    """
+    try:
+        result = subprocess.run(
+            ["ruby", "-e", RUBY_YAML_USES, str(path)],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+    except FileNotFoundError as exc:
+        raise RuntimeError("Ruby/Psych YAML parser is unavailable") from exc
+    except subprocess.SubprocessError as exc:
+        raise RuntimeError(f"YAML structural parse failed for {path}: {exc}") from exc
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"YAML structural parser returned invalid JSON for {path}") from exc
+    if not isinstance(payload, list):
+        raise RuntimeError(f"YAML structural parser returned an unexpected result for {path}")
+    return payload
+
 
 def api_json(path: str, params: dict[str, str] | None = None) -> object:
     command = ["gh", "api", "--method", "GET", path]
@@ -96,10 +154,19 @@ def discover_actions(source_root: Path) -> dict[str, str]:
     workflows = workflow_directory(source_root)
     actions: dict[str, str] = {}
     for path in sorted([*workflows.glob("*.yml"), *workflows.glob("*.yaml")]):
-        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        lines = path.read_text(encoding="utf-8").splitlines()
+        for item in structural_uses(path):
+            lineno = item.get("line")
+            value = item.get("value")
+            if not isinstance(lineno, int) or lineno < 1 or lineno > len(lines) or not isinstance(value, str):
+                raise RuntimeError(f"Invalid structural uses result for {path}")
+            line = lines[lineno - 1]
             stripped = line.strip()
             if not USES_KEY_RE.match(stripped):
-                continue
+                raise RuntimeError(
+                    f"Unsupported YAML uses mapping syntax; only simple block-style uses entries are allowed: "
+                    f"{path}:{lineno}: {stripped}"
+                )
             if LOCAL_USES_RE.match(stripped):
                 raise RuntimeError(
                     f"Local composite action reference requires explicit recursive scanner support: {path}:{lineno}: {stripped}"
@@ -110,6 +177,8 @@ def discover_actions(source_root: Path) -> dict[str, str]:
             if not match:
                 raise RuntimeError(f"External GitHub Action is not pinned to a 40-character SHA: {path}:{lineno}: {stripped}")
             coordinate, sha = match.groups()
+            if value != f"{coordinate}@{sha}":
+                raise RuntimeError(f"Structural/source Action reference mismatch at {path}:{lineno}")
             parts = coordinate.split("/")
             if len(parts) < 2:
                 raise RuntimeError(f"Invalid action coordinate at {path}:{lineno}: {coordinate}")

@@ -67,7 +67,14 @@ def active_blockers(threads: object) -> list[str]:
     return blockers
 
 
-def has_exact_review(reviews: object, sha: str) -> bool:
+def _affirmative_clean_body(body: str, sha: str) -> bool:
+    if not body.startswith(CLEAN_PREFIX) or "**Reviewed commit:**" not in body:
+        return False
+    return f"`{sha}`" in body or f"`{sha[:10]}`" in body
+
+
+def has_clean_review(reviews: object, sha: str) -> bool:
+    """Accept a review only when Codex explicitly reports a clean exact commit."""
     if not isinstance(reviews, list):
         return False
     for review in reviews:
@@ -78,12 +85,13 @@ def has_exact_review(reviews: object, sha: str) -> bool:
             continue
         if str(review.get("state") or "") in DISMISSED_STATES:
             continue
-        commit_id = str(review.get("commit_id") or review.get("commitId") or "")
         body = str(review.get("body") or "")
-        if commit_id == sha:
-            return True
-        if f"Reviewed commit:** `{sha[:10]}`" in body or f"Reviewed commit:** `{sha}`" in body:
-            return True
+        commit_id = str(review.get("commit_id") or review.get("commitId") or "")
+        if not _affirmative_clean_body(body, sha):
+            continue
+        if commit_id and commit_id != sha:
+            continue
+        return True
     return False
 
 
@@ -97,14 +105,14 @@ def has_clean_comment(comments: object, sha: str) -> bool:
         if not _codex(_login(author)):
             continue
         body = str(comment.get("body") or "")
-        if body.startswith(CLEAN_PREFIX) and "**Reviewed commit:**" in body and sha[:10] in body:
+        if _affirmative_clean_body(body, sha):
             return True
     return False
 
 
 def evaluate(reviews: object, threads: object, comments: object, sha: str) -> dict:
     blockers = active_blockers(threads)
-    evidence = has_exact_review(reviews, sha) or has_clean_comment(comments, sha)
+    evidence = has_clean_review(reviews, sha) or has_clean_comment(comments, sha)
     if blockers:
         state = "blocked"
     elif evidence:
