@@ -353,6 +353,19 @@ jobs:
             exit 1
           fi
 
+      - name: Revalidate exact private main before write capability
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          set -euo pipefail
+          current_main="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
+          [[ "$current_main" == "$SOURCE_SHA" ]] || {
+            echo "Private main advanced after validation; refusing stale site publication."
+            exit 1
+          }
+
       - name: Create public-repository publisher token
         id: publisher-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -409,6 +422,7 @@ jobs:
         shell: bash
         working-directory: public-repo
         env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
           SOURCE_SHA: ${{ steps.source.outputs.sha }}
           BOT_NAME: ${{ steps.publisher-identity.outputs.name }}
           BOT_EMAIL: ${{ steps.publisher-identity.outputs.email }}
@@ -423,5 +437,10 @@ jobs:
             echo "No allow-listed site changes to publish."
             exit 0
           fi
+          current_main="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
+          [[ "$current_main" == "$SOURCE_SHA" ]] || {
+            echo "Private main advanced at publication boundary; refusing stale site publication."
+            exit 1
+          }
           git commit -m "Publish Patch Watch from ${SOURCE_SHA}"
           git push origin HEAD:main
