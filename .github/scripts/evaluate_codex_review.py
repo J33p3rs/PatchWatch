@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from datetime import datetime
 from pathlib import Path
 
 CODEX_LOGINS = {"chatgpt-codex-connector", "chatgpt-codex-connector[bot]"}
@@ -73,46 +74,77 @@ def _affirmative_clean_body(body: str, sha: str) -> bool:
     return f"`{sha}`" in body or f"`{sha[:10]}`" in body
 
 
-def has_clean_review(reviews: object, sha: str) -> bool:
-    """Accept a review only when Codex explicitly reports a clean exact commit."""
-    if not isinstance(reviews, list):
-        return False
-    for review in reviews:
-        if not isinstance(review, dict):
-            continue
-        author = review.get("user") or review.get("author")
-        if not _codex(_login(author)):
-            continue
-        if str(review.get("state") or "") in DISMISSED_STATES:
-            continue
-        body = str(review.get("body") or "")
-        commit_id = str(review.get("commit_id") or review.get("commitId") or "")
-        if not _affirmative_clean_body(body, sha):
-            continue
-        if commit_id and commit_id != sha:
-            continue
-        return True
-    return False
+def _exact_review_body(body: str, sha: str) -> bool:
+    return "**Reviewed commit:**" in body and (f"`{sha}`" in body or f"`{sha[:10]}`" in body)
 
 
-def has_clean_comment(comments: object, sha: str) -> bool:
-    if not isinstance(comments, list):
+def _event_time(item: dict, *keys: str) -> datetime | None:
+    for key in keys:
+        raw = item.get(key)
+        if not raw:
+            continue
+        try:
+            return datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        except ValueError:
+            return None
+    return None
+
+
+def latest_exact_codex_verdict_is_clean(reviews: object, comments: object, sha: str) -> bool:
+    """Require the latest exact-SHA Codex verdict to be affirmative clean evidence.
+
+    A later exact-SHA Codex review with suggestions invalidates any earlier clean verdict,
+    even after its inline blocker threads are resolved. When more than one exact verdict
+    exists, timestamps are mandatory so ordering cannot be guessed from API list position.
+    Conflicting verdicts tied at the latest timestamp are ambiguous and fail closed.
+    """
+    events: list[tuple[datetime | None, bool]] = []
+
+    if isinstance(reviews, list):
+        for review in reviews:
+            if not isinstance(review, dict):
+                continue
+            author = review.get("user") or review.get("author")
+            if not _codex(_login(author)):
+                continue
+            if str(review.get("state") or "") in DISMISSED_STATES:
+                continue
+            body = str(review.get("body") or "")
+            commit_id = str(review.get("commit_id") or review.get("commitId") or "")
+            exact = commit_id == sha or _exact_review_body(body, sha)
+            if not exact:
+                continue
+            clean = _affirmative_clean_body(body, sha) and (not commit_id or commit_id == sha)
+            events.append((_event_time(review, "submitted_at", "submittedAt", "created_at", "createdAt"), clean))
+
+    if isinstance(comments, list):
+        for comment in comments:
+            if not isinstance(comment, dict):
+                continue
+            author = comment.get("user") or comment.get("author")
+            if not _codex(_login(author)):
+                continue
+            body = str(comment.get("body") or "")
+            if not _affirmative_clean_body(body, sha):
+                continue
+            events.append((_event_time(comment, "created_at", "createdAt", "updated_at", "updatedAt"), True))
+
+    if not events:
         return False
-    for comment in comments:
-        if not isinstance(comment, dict):
-            continue
-        author = comment.get("user") or comment.get("author")
-        if not _codex(_login(author)):
-            continue
-        body = str(comment.get("body") or "")
-        if _affirmative_clean_body(body, sha):
-            return True
-    return False
+    if len(events) == 1:
+        return events[0][1]
+    if any(timestamp is None for timestamp, _ in events):
+        return False
+    latest_time = max(timestamp for timestamp, _ in events)
+    latest_verdicts = {clean for timestamp, clean in events if timestamp == latest_time}
+    if len(latest_verdicts) != 1:
+        return False
+    return latest_verdicts.pop()
 
 
 def evaluate(reviews: object, threads: object, comments: object, sha: str) -> dict:
     blockers = active_blockers(threads)
-    evidence = has_clean_review(reviews, sha) or has_clean_comment(comments, sha)
+    evidence = latest_exact_codex_verdict_is_clean(reviews, comments, sha)
     if blockers:
         state = "blocked"
     elif evidence:
