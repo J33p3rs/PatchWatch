@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: patchwatch-public-publish
+  group: patchwatch-public-controller
   cancel-in-progress: false
 
 jobs:
@@ -22,11 +22,11 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          EXECUTING_SHA: ${{ github.sha }}
+          PATCHWATCH_INSTALLED_REPO: ${{ github.repository }}
+          PATCHWATCH_INSTALLED_EXECUTING_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          [[ "$EXECUTING_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid executing workflow SHA."; exit 1; }
+          [[ "$PATCHWATCH_INSTALLED_EXECUTING_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid executing workflow SHA."; exit 1; }
           tmp="$(mktemp -d)"
           trap 'rm -rf "$tmp"' EXIT
           mkdir -p "$tmp/.github/workflows" "$tmp/.github/scripts"
@@ -34,7 +34,7 @@ jobs:
             .github/workflows/publish-validated-source.yml \
             .github/workflows/sync-validated-controller.yml \
             .github/scripts/check-patchwatch-action-advisories.py; do
-            encoded="$(gh api "/repos/${REPO}/contents/${path}?ref=${EXECUTING_SHA}" --jq '.content // empty')"
+            encoded="$(gh api "/repos/${PATCHWATCH_INSTALLED_REPO}/contents/${path}?ref=${PATCHWATCH_INSTALLED_EXECUTING_SHA}" --jq '.content // empty')"
             [[ -n "$encoded" ]] || { echo "Could not load installed trust artefact: $path"; exit 1; }
             printf '%s' "$encoded" | tr -d '\n' | base64 --decode > "$tmp/$path"
           done
