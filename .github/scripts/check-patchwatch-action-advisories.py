@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -48,11 +49,7 @@ puts JSON.generate(found)
 
 
 def structural_uses(path: Path) -> list[dict[str, object]]:
-    """Return decoded YAML `uses` mapping keys using Ruby's standard Psych parser.
-
-    Structural parsing is the trust boundary. Source-line regexes below are used
-    only to enforce the deliberately narrow, rewriteable simple block syntax.
-    """
+    """Return decoded YAML `uses` mapping keys using Ruby's standard Psych parser."""
     try:
         result = subprocess.run(
             ["ruby", "-e", RUBY_YAML_USES, str(path)],
@@ -85,6 +82,33 @@ def api_json(path: str, params: dict[str, str] | None = None) -> object:
         raise RuntimeError(f"GitHub API request failed for fixed API path {path}: {exc}") from exc
 
 
+def require_current_public_main() -> None:
+    """Reject a queued installed-controller run whose executing SHA is no longer public main.
+
+    Installed public workflow preflights opt into this guard with dedicated identity
+    variables supplied by the built-in github.token context. Candidate/offline scans
+    and unrelated workflow bookkeeping variables are deliberately unaffected.
+    """
+    repository = os.environ.get("PATCHWATCH_INSTALLED_REPO", "")
+    executing_sha = os.environ.get("PATCHWATCH_INSTALLED_EXECUTING_SHA", "")
+    if not repository and not executing_sha:
+        return
+    if not repository or not executing_sha:
+        raise RuntimeError("Incomplete installed-controller execution identity")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
+        raise RuntimeError("Invalid installed-controller repository identity")
+    if not re.fullmatch(r"[0-9a-fA-F]{40}", executing_sha):
+        raise RuntimeError("Invalid installed-controller executing SHA")
+    payload = api_json(f"/repos/{repository}/commits/main")
+    if not isinstance(payload, dict):
+        raise RuntimeError("Unexpected public main response during installed-controller preflight")
+    installed_main_sha = str(payload.get("sha", ""))
+    if installed_main_sha.lower() != executing_sha.lower():
+        raise RuntimeError(
+            f"Stale queued PatchWatch controller run: executing {executing_sha} but current public main is {installed_main_sha or 'unknown'}"
+        )
+
+
 def all_tags(repository: str) -> list[dict]:
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
         raise RuntimeError(f"Invalid GitHub Action repository coordinate: {repository}")
@@ -102,8 +126,9 @@ def all_tags(repository: str) -> list[dict]:
             raise RuntimeError(f"Refusing excessive tag pagination for {repository}")
 
 
-def exact_release_version(repository: str, sha: str) -> str:
-    candidates: list[tuple[int, int, int, str]] = []
+def exact_release_versions(repository: str, sha: str) -> list[str]:
+    """Return every unique exact X.Y.Z tag attached to the pinned commit."""
+    candidates: set[tuple[int, int, int, str]] = set()
     for tag in all_tags(repository):
         commit = tag.get("commit") or {}
         if str(commit.get("sha", "")).lower() != sha.lower():
@@ -115,13 +140,12 @@ def exact_release_version(repository: str, sha: str) -> str:
         major = int(match.group("major"))
         minor = int(match.group("minor"))
         patch = int(match.group("patch"))
-        candidates.append((major, minor, patch, f"{major}.{minor}.{patch}"))
+        candidates.add((major, minor, patch, f"{major}.{minor}.{patch}"))
     if not candidates:
         raise RuntimeError(
             f"Pinned action {repository}@{sha} does not map to an exact X.Y.Z release tag; refusing an unverifiable dependency version"
         )
-    candidates.sort(reverse=True)
-    return candidates[0][3]
+    return [item[3] for item in sorted(candidates, reverse=True)]
 
 
 def advisories(repository: str, version: str, severity: str) -> list[dict]:
@@ -198,20 +222,27 @@ def main() -> int:
         return 2
 
     try:
+        require_current_public_main()
         actions = discover_actions(Path(sys.argv[1]))
-        blockers: list[tuple[str, str, str, str]] = []
+        blockers: set[tuple[str, str, str, str]] = set()
+        checked_versions = 0
         for repository, sha in sorted(actions.items()):
-            version = exact_release_version(repository, sha)
-            print(f"Verified pinned action release: {repository}@{sha} -> {version}")
-            for severity in ("critical", "high"):
-                for advisory in advisories(repository, version, severity):
-                    blockers.append((repository, version, severity, str(advisory.get("ghsa_id", "unknown-advisory"))))
+            versions = exact_release_versions(repository, sha)
+            checked_versions += len(versions)
+            print(f"Verified pinned action release aliases: {repository}@{sha} -> {', '.join(versions)}")
+            for version in versions:
+                for severity in ("critical", "high"):
+                    for advisory in advisories(repository, version, severity):
+                        blockers.add((repository, version, severity, str(advisory.get("ghsa_id", "unknown-advisory"))))
         if blockers:
             print("High/Critical GitHub Action advisories block PatchWatch publication:", file=sys.stderr)
-            for repository, version, severity, ghsa in blockers:
+            for repository, version, severity, ghsa in sorted(blockers):
                 print(f"- {repository}@{version}: {severity} {ghsa}", file=sys.stderr)
             return 1
-        print(f"No High/Critical GitHub-reviewed advisories affect {len(actions)} exact pinned action release(s).")
+        print(
+            f"No High/Critical GitHub-reviewed advisories affect {len(actions)} exact pinned action repository/repositories "
+            f"across {checked_versions} exact release alias(es)."
+        )
         return 0
     except Exception as exc:
         print(f"Exact GitHub Action advisory check failed closed: {exc}", file=sys.stderr)
