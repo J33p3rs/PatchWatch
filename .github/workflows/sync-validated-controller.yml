@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: patchwatch-controller-sync
+  group: patchwatch-public-controller
   cancel-in-progress: false
 
 jobs:
@@ -22,11 +22,11 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          EXECUTING_SHA: ${{ github.sha }}
+          PATCHWATCH_INSTALLED_REPO: ${{ github.repository }}
+          PATCHWATCH_INSTALLED_EXECUTING_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          [[ "$EXECUTING_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid executing workflow SHA."; exit 1; }
+          [[ "$PATCHWATCH_INSTALLED_EXECUTING_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid executing workflow SHA."; exit 1; }
           tmp="$(mktemp -d)"
           trap 'rm -rf "$tmp"' EXIT
           mkdir -p "$tmp/.github/workflows" "$tmp/.github/scripts"
@@ -34,7 +34,7 @@ jobs:
             .github/workflows/publish-validated-source.yml \
             .github/workflows/sync-validated-controller.yml \
             .github/scripts/check-patchwatch-action-advisories.py; do
-            encoded="$(gh api "/repos/${REPO}/contents/${path}?ref=${EXECUTING_SHA}" --jq '.content // empty')"
+            encoded="$(gh api "/repos/${PATCHWATCH_INSTALLED_REPO}/contents/${path}?ref=${PATCHWATCH_INSTALLED_EXECUTING_SHA}" --jq '.content // empty')"
             [[ -n "$encoded" ]] || { echo "Could not load installed trust artefact: $path"; exit 1; }
             printf '%s' "$encoded" | tr -d '\n' | base64 --decode > "$tmp/$path"
           done
@@ -154,14 +154,6 @@ jobs:
           current_source="${published_sources[0]}"
           [[ "$current_source" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid current production source marker."; exit 1; }
 
-          # Review evidence follows trust-relevant controller content, not later data-only
-          # source movement. If the current public source already has the same canonical
-          # controller/security-trust content as validated private main, walk backwards
-          # through distinct published source markers to the earliest contiguous source
-          # with that same content. Its immediately preceding marker is the exact review
-          # baseline that authorised the controller bundle. If the current public source
-          # differs in trust-relevant content, the current private SOURCE_SHA itself needs
-          # a fresh review against current production.
           trust_paths=(PatchWatch/public-controller .github/workflows/patchwatch-security.yml)
           review_candidate="$SOURCE_SHA"
           reviewed_base="$current_source"
@@ -232,8 +224,6 @@ jobs:
             exit 1
           fi
 
-          # The already-installed evaluator is the trust root. Candidate controller code
-          # never decides whether its own review evidence is clean.
           review_result="$(python "$installed_evaluator" \
             --sha "$review_candidate" \
             --reviews "$tmp/reviews.json" \
@@ -245,8 +235,6 @@ jobs:
             exit 1
           }
 
-          # Check the candidate controller's exact Action pins with the already-installed
-          # scanner before those candidate workflows can ever execute publicly.
           python "$installed_scanner" "$canonical"
 
           echo "changed=true" >> "$GITHUB_OUTPUT"
