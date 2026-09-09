@@ -152,19 +152,28 @@ def exact_release_versions(repository: str, sha: str) -> list[str]:
 
 
 def advisories(repository: str, version: str, severity: str) -> list[dict]:
-    payload = api_json(
-        "/advisories",
-        {
-            "ecosystem": "actions",
-            "type": "reviewed",
-            "severity": severity,
-            "affects": f"{repository}@{version}",
-            "per_page": "100",
-        },
-    )
-    if not isinstance(payload, list):
-        raise RuntimeError(f"Unexpected advisory response for {repository}@{version}")
-    return [item for item in payload if item.get("withdrawn_at") is None]
+    results: list[dict] = []
+    page = 1
+    while True:
+        payload = api_json(
+            "/advisories",
+            {
+                "ecosystem": "actions",
+                "type": "reviewed",
+                "severity": severity,
+                "affects": f"{repository}@{version}",
+                "per_page": "100",
+                "page": str(page),
+            },
+        )
+        if not isinstance(payload, list):
+            raise RuntimeError(f"Unexpected advisory response for {repository}@{version}")
+        results.extend(item for item in payload if item.get("withdrawn_at") is None)
+        if len(payload) < 100:
+            return results
+        page += 1
+        if page > 100:
+            raise RuntimeError(f"Refusing excessive advisory pagination for {repository}@{version}")
 
 
 def workflow_directory(source_root: Path) -> Path:
