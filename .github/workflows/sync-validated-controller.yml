@@ -78,7 +78,7 @@ jobs:
           run_status="$(jq -r '.status // empty' <<<"$latest_run")"
           run_conclusion="$(jq -r '.conclusion // empty' <<<"$latest_run")"
           [[ "$main_sha" =~ ^[0-9a-f]{40}$ && "$validated_sha" == "$main_sha" && "$run_status" == "completed" && "$run_conclusion" == "success" ]] || {
-            echo "Latest PatchWatch security run is not a successful exact-main validation."
+            echo "Latest Patch Watch security run is not a successful exact-main validation."
             exit 1
           }
           echo "sha=$main_sha" >> "$GITHUB_OUTPUT"
@@ -154,6 +154,14 @@ jobs:
           current_source="${published_sources[0]}"
           [[ "$current_source" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid current production source marker."; exit 1; }
 
+          # Review evidence follows trust-relevant controller content, not later data-only
+          # source movement. If the current public source already has the same canonical
+          # controller/security-trust content as validated private main, walk backwards
+          # through distinct published source markers to the earliest contiguous source
+          # with that same content. Its immediately preceding marker is the exact review
+          # baseline that authorised the controller bundle. If the current public source
+          # differs in trust-relevant content, the current private SOURCE_SHA itself needs
+          # a fresh review against current production.
           trust_paths=(PatchWatch/public-controller .github/workflows/patchwatch-security.yml)
           review_candidate="$SOURCE_SHA"
           reviewed_base="$current_source"
@@ -224,6 +232,8 @@ jobs:
             exit 1
           fi
 
+          # The already-installed evaluator is the trust root. Candidate controller code
+          # never decides whether its own review evidence is clean.
           review_result="$(python "$installed_evaluator" \
             --sha "$review_candidate" \
             --reviews "$tmp/reviews.json" \
@@ -235,6 +245,8 @@ jobs:
             exit 1
           }
 
+          # Check the candidate controller's exact Action pins with the already-installed
+          # scanner before those candidate workflows can ever execute publicly.
           python "$installed_scanner" "$canonical"
 
           echo "changed=true" >> "$GITHUB_OUTPUT"
