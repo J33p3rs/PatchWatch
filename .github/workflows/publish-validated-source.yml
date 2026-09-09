@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: patchwatch-public-publish
+  group: patchwatch-public-controller
   cancel-in-progress: false
 
 jobs:
@@ -18,6 +18,28 @@ jobs:
     environment: patchwatch-production
 
     steps:
+      - name: Preflight installed controller Action advisories before App secrets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PATCHWATCH_INSTALLED_REPO: ${{ github.repository }}
+          PATCHWATCH_INSTALLED_EXECUTING_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          [[ "$PATCHWATCH_INSTALLED_EXECUTING_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid executing workflow SHA."; exit 1; }
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          mkdir -p "$tmp/.github/workflows" "$tmp/.github/scripts"
+          for path in \
+            .github/workflows/publish-validated-source.yml \
+            .github/workflows/sync-validated-controller.yml \
+            .github/scripts/check-patchwatch-action-advisories.py; do
+            encoded="$(gh api "/repos/${PATCHWATCH_INSTALLED_REPO}/contents/${path}?ref=${PATCHWATCH_INSTALLED_EXECUTING_SHA}" --jq '.content // empty')"
+            [[ -n "$encoded" ]] || { echo "Could not load installed trust artefact: $path"; exit 1; }
+            printf '%s' "$encoded" | tr -d '\n' | base64 --decode > "$tmp/$path"
+          done
+          python "$tmp/.github/scripts/check-patchwatch-action-advisories.py" "$tmp"
+
       - name: Validate GitHub App configuration
         shell: bash
         env:
@@ -47,45 +69,53 @@ jobs:
           permission-actions: read
           permission-contents: read
           permission-pull-requests: read
+          permission-vulnerability-alerts: read
 
-      - name: Resolve and verify latest validated private source commit
+      - name: Resolve exact successful private main
         id: source
         shell: bash
         env:
           GH_TOKEN: ${{ steps.source-token.outputs.token }}
-          TRUSTED_SECURITY_WORKFLOW_BLOB_SHA: 875701b614565f49d45527bef5cdcb91a2e13d93
         run: |
           set -euo pipefail
-
-          source_sha="$(
-            gh api \
-              '/repos/J33p3rs/ai-learning-challenge/actions/workflows/patchwatch-security.yml/runs?branch=main&status=success&per_page=1' \
-              --jq '.workflow_runs[0].head_sha // empty'
-          )"
-          [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]] || { echo "Could not resolve latest successful Patch Watch source SHA."; exit 1; }
-
           main_sha="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
-          [[ "$main_sha" =~ ^[0-9a-f]{40}$ ]] || { echo "Could not resolve private main SHA."; exit 1; }
-
-          ancestry_status="$(gh api "/repos/J33p3rs/ai-learning-challenge/compare/${source_sha}...${main_sha}" --jq '.status')"
-          if [[ "$ancestry_status" != "ahead" && "$ancestry_status" != "identical" ]]; then
-            echo "Validated source is not an ancestor of current private main (status: $ancestry_status)."
+          latest_run="$(gh api '/repos/J33p3rs/ai-learning-challenge/actions/workflows/patchwatch-security.yml/runs?branch=main&per_page=1' --jq '.workflow_runs[0] // empty')"
+          source_sha="$(jq -r '.head_sha // empty' <<<"$latest_run")"
+          run_status="$(jq -r '.status // empty' <<<"$latest_run")"
+          run_conclusion="$(jq -r '.conclusion // empty' <<<"$latest_run")"
+          [[ "$main_sha" =~ ^[0-9a-f]{40}$ && "$source_sha" == "$main_sha" && "$run_status" == "completed" && "$run_conclusion" == "success" ]] || {
+            echo "Latest Patch Watch security run is not a successful exact-main validation."
             exit 1
-          fi
-
-          validator_blob_sha="$(
-            gh api "/repos/J33p3rs/ai-learning-challenge/contents/.github/workflows/patchwatch-security.yml?ref=${source_sha}" --jq '.sha // empty'
-          )"
-          if [[ "$validator_blob_sha" != "$TRUSTED_SECURITY_WORKFLOW_BLOB_SHA" ]]; then
-            echo "Candidate source used an untrusted Patch Watch security workflow definition."
-            echo "Expected: $TRUSTED_SECURITY_WORKFLOW_BLOB_SHA"
-            echo "Candidate: $validator_blob_sha"
-            exit 1
-          fi
-
-          echo "Validated private source: $source_sha"
-          echo "Current private main:      $main_sha"
+          }
           echo "sha=$source_sha" >> "$GITHUB_OUTPUT"
+          echo "main_sha=$main_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Block High/Critical Dependabot alerts
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
+          EXPECTED_MAIN_SHA: ${{ steps.source.outputs.main_sha }}
+        run: |
+          set -euo pipefail
+          before_sha="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
+          [[ "$before_sha" == "$EXPECTED_MAIN_SHA" ]] || {
+            echo "Private main advanced before the Dependabot scan; refusing a stale dependency decision."
+            exit 1
+          }
+          gh api --paginate \
+            '/repos/J33p3rs/ai-learning-challenge/dependabot/alerts?state=open&per_page=100' \
+            --jq '.[]' | jq -s '[.[] | select(.security_advisory.severity == "high" or .security_advisory.severity == "critical")]' > dependabot-blockers.json
+          after_sha="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
+          [[ "$after_sha" == "$EXPECTED_MAIN_SHA" ]] || {
+            echo "Private main advanced during the Dependabot scan; refusing an unbound dependency decision."
+            exit 1
+          }
+          blocker_count="$(jq 'length' dependabot-blockers.json)"
+          if (( blocker_count > 0 )); then
+            echo "Open High/Critical Dependabot alerts block PatchWatch publication: ${blocker_count}"
+            jq -r '.[] | "- alert #\(.number): \(.dependency.package.name) [\(.security_advisory.severity)] \(.security_advisory.ghsa_id)"' dependabot-blockers.json
+            exit 1
+          fi
 
       - name: Check out validated private source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -107,6 +137,57 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
+      - name: Verify installed security-workflow trust state
+        shell: bash
+        run: |
+          set -euo pipefail
+          state_file='public-repo/.github/trusted-security-workflow-blob'
+          [[ -f "$state_file" ]] || { echo "Missing public security-workflow trust state."; exit 1; }
+          trusted_blob="$(tr -d '\r\n' < "$state_file")"
+          candidate_blob="$(git -C source rev-parse 'HEAD:.github/workflows/patchwatch-security.yml')"
+          [[ "$trusted_blob" =~ ^[0-9a-f]{40}$ && "$candidate_blob" =~ ^[0-9a-f]{40}$ ]] || {
+            echo "Invalid security-workflow trust state."; exit 1;
+          }
+          [[ "$candidate_blob" == "$trusted_blob" ]] || {
+            echo "Private security workflow has not yet been promoted through the trusted controller sync."
+            echo "Trusted:   $trusted_blob"
+            echo "Candidate: $candidate_blob"
+            exit 1
+          }
+
+      - name: Require synchronised public controller before site publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          canonical='source/PatchWatch/public-controller'
+          cmp -s "$canonical/workflows/publish-validated-source.yml" public-repo/.github/workflows/publish-validated-source.yml || {
+            echo "Public publisher controller is not synchronised with validated private source; controller sync must complete before site publication."
+            exit 1
+          }
+          cmp -s "$canonical/workflows/sync-validated-controller.yml" public-repo/.github/workflows/sync-validated-controller.yml || {
+            echo "Public sync controller is not synchronised with validated private source; controller sync must complete before site publication."
+            exit 1
+          }
+          cmp -s "$canonical/scripts/check-patchwatch-action-advisories.py" public-repo/.github/scripts/check-patchwatch-action-advisories.py || {
+            echo "Public advisory scanner is not synchronised with validated private source; controller sync must complete before site publication."
+            exit 1
+          }
+          cmp -s "$canonical/scripts/evaluate_codex_review.py" public-repo/.github/scripts/evaluate_codex_review.py || {
+            echo "Public review evaluator is not synchronised with validated private source; controller sync must complete before site publication."
+            exit 1
+          }
+
+      - name: Check exact canonical controller GitHub Action advisories
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          # Use the already-installed public scanner as the trust root. Candidate scanner
+          # changes cannot approve their own Action dependency set.
+          python public-repo/.github/scripts/check-patchwatch-action-advisories.py \
+            source/PatchWatch/public-controller
+
       - name: Verify forward-only source and classify changes
         id: gate
         shell: bash
@@ -115,32 +196,24 @@ jobs:
           SOURCE_SHA: ${{ steps.source.outputs.sha }}
         run: |
           set -euo pipefail
-
-          current_message="$(
-            git -C public-repo log --format=%s |
-              grep -m1 -E '^Publish Patch Watch from [0-9a-f]{40}$' || true
-          )"
+          current_message="$(git -C public-repo log --format=%s | grep -m1 -E '^Publish Patch Watch from [0-9a-f]{40}$' || true)"
           if [[ ! "$current_message" =~ ^Publish\ Patch\ Watch\ from\ ([0-9a-f]{40})$ ]]; then
             echo "No recognised publication source marker exists in public history."
             exit 1
           fi
           current_source="${BASH_REMATCH[1]}"
-
           compare_json="$(gh api "/repos/J33p3rs/ai-learning-challenge/compare/${current_source}...${SOURCE_SHA}")"
           status="$(jq -r '.status' <<<"$compare_json")"
           if [[ "$status" != "ahead" && "$status" != "identical" ]]; then
             echo "Candidate would not move forward from current published source (status: $status)."
             exit 1
           fi
-
           changed_file_count="$(jq '.files | length' <<<"$compare_json")"
           if (( changed_file_count >= 300 )); then
             echo "Compare API returned ${changed_file_count} changed files, at or above GitHub's 300-file cap."
-            echo "Refusing data-only classification because the changed-file list may be truncated."
             exit 1
           fi
-
-          jq -r '.files[].filename' <<<"$compare_json" > changed-files.txt
+          jq -r '.files[] | .filename, (.previous_filename // empty)' <<<"$compare_json" | sed '/^$/d' > changed-files.txt
 
           review_required=false
           while IFS= read -r path; do
@@ -155,11 +228,10 @@ jobs:
               echo "Codex review required due to: $path"
             fi
           done < changed-files.txt
-
           echo "current_source=$current_source" >> "$GITHUB_OUTPUT"
           echo "review_required=$review_required" >> "$GITHUB_OUTPUT"
 
-      - name: Require exact-source Codex review evidence for substantive changes
+      - name: Require clean exact-source Codex review for substantive changes
         if: steps.gate.outputs.review_required == 'true'
         shell: bash
         env:
@@ -168,40 +240,37 @@ jobs:
           CURRENT_SOURCE: ${{ steps.gate.outputs.current_source }}
         run: |
           set -euo pipefail
-
           release_pr="$(
-            gh api '/repos/J33p3rs/ai-learning-challenge/pulls?state=open&head=J33p3rs:patchwatch-release-review&per_page=10' \
-              --jq ".[] | select(.head.sha == \"${SOURCE_SHA}\" and .base.sha == \"${CURRENT_SOURCE}\") | .number" |
+            gh api --paginate '/repos/J33p3rs/ai-learning-challenge/pulls?state=open&per_page=100' \
+              --jq ".[] | select(((.head.ref == \"patchwatch-release-review\") or (.head.ref | startswith(\"patchwatch-release-review-\"))) and .head.sha == \"${SOURCE_SHA}\" and .base.sha == \"${CURRENT_SOURCE}\") | .number" |
               head -n 1
           )"
           [[ "$release_pr" =~ ^[0-9]+$ ]] || {
             echo "No open Patch Watch release-review PR has exact head ${SOURCE_SHA} and production base ${CURRENT_SOURCE}."
             exit 1
           }
-
-          evidence="$(
-            gh api "/repos/J33p3rs/ai-learning-challenge/pulls/${release_pr}/reviews" \
-              --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and .commit_id == \"${SOURCE_SHA}\") | .id" |
-              tail -n 1
-          )"
-          if [[ "$evidence" =~ ^[0-9]+$ ]]; then
-            echo "Codex review evidence found on release-review PR #${release_pr} for ${SOURCE_SHA}."
-            exit 0
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          gh api --paginate "/repos/J33p3rs/ai-learning-challenge/pulls/${release_pr}/reviews?per_page=100" --jq '.[]' | jq -s '.' > "$tmp/reviews.json"
+          gh api --paginate "/repos/J33p3rs/ai-learning-challenge/issues/${release_pr}/comments?per_page=100" --jq '.[]' | jq -s '.' > "$tmp/comments.json"
+          gh api graphql \
+            -f query='query($number:Int!){repository(owner:"J33p3rs",name:"ai-learning-challenge"){pullRequest(number:$number){reviewThreads(first:100){nodes{isResolved isOutdated comments(first:100){nodes{author{login} body} pageInfo{hasNextPage}}} pageInfo{hasNextPage}}}}}' \
+            -F number="$release_pr" > "$tmp/threads.json"
+          if [[ "$(jq -r '.data.repository.pullRequest.reviewThreads.pageInfo.hasNextPage' "$tmp/threads.json")" == "true" ]] || \
+             [[ "$(jq '[.data.repository.pullRequest.reviewThreads.nodes[].comments.pageInfo.hasNextPage] | any' "$tmp/threads.json")" == "true" ]]; then
+            echo "Release review threads exceed safe evaluation bounds."
+            exit 1
           fi
-
-          short_sha="${SOURCE_SHA:0:10}"
-          clean_comment_id="$(
-            gh api "/repos/J33p3rs/ai-learning-challenge/issues/${release_pr}/comments?per_page=100" \
-              --jq ".[] | select(.user.login == \"chatgpt-codex-connector[bot]\" and (.body | startswith(\"Codex Review: Didn't find any major issues.\")) and (.body | contains(\"**Reviewed commit:**\")) and (.body | contains(\"${short_sha}\"))) | .id" |
-              tail -n 1
-          )"
-          if [[ "$clean_comment_id" =~ ^[0-9]+$ ]]; then
-            echo "Clean Codex review comment evidence found on release-review PR #${release_pr} for ${SOURCE_SHA}."
-            exit 0
+          review_result="$(python public-repo/.github/scripts/evaluate_codex_review.py \
+            --sha "$SOURCE_SHA" \
+            --reviews "$tmp/reviews.json" \
+            --threads "$tmp/threads.json" \
+            --comments "$tmp/comments.json")"
+          if [[ "$(jq -r '.state' <<<"$review_result")" != "clean" ]]; then
+            echo "Substantive Patch Watch changes require clean exact-source Codex review evidence tied to ${SOURCE_SHA}."
+            echo "$review_result"
+            exit 1
           fi
-
-          echo "Substantive Patch Watch changes require Codex review evidence tied to exact source ${SOURCE_SHA}."
-          exit 1
 
       - name: Verify committed Monthly Notes match source data
         shell: bash
@@ -220,7 +289,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           mkdir -p publish/data
           for path in \
             index.html nvd.html kev.html notes.html \
@@ -262,7 +330,6 @@ jobs:
           style.css
           trend.css
           EOF
-
           find publish -type f -printf '%P\n' | sort > actual-site-files.txt
           sort -o expected-site-files.txt expected-site-files.txt
           diff -u expected-site-files.txt actual-site-files.txt
@@ -271,7 +338,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           git -C public-repo ls-files -s | while read -r mode object stage path; do
             [[ "$path" == .github/* ]] && continue
             if [[ "$mode" != "100644" && "$mode" != "100755" ]]; then
@@ -280,13 +346,25 @@ jobs:
             fi
             echo "$path"
           done | sort > current-site-files.txt
-
           unexpected="$(comm -23 current-site-files.txt expected-site-files.txt || true)"
           if [[ -n "$unexpected" ]]; then
             echo "Unexpected public site tracked entry/entries:"
             echo "$unexpected"
             exit 1
           fi
+
+      - name: Revalidate exact private main before write capability
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          set -euo pipefail
+          current_main="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
+          [[ "$current_main" == "$SOURCE_SHA" ]] || {
+            echo "Private main advanced after validation; refusing stale site publication."
+            exit 1
+          }
 
       - name: Create public-repository publisher token
         id: publisher-token
@@ -344,23 +422,25 @@ jobs:
         shell: bash
         working-directory: public-repo
         env:
+          GH_TOKEN: ${{ steps.source-token.outputs.token }}
           SOURCE_SHA: ${{ steps.source.outputs.sha }}
           BOT_NAME: ${{ steps.publisher-identity.outputs.name }}
           BOT_EMAIL: ${{ steps.publisher-identity.outputs.email }}
         run: |
           set -euo pipefail
-
           git config user.name "$BOT_NAME"
           git config user.email "$BOT_EMAIL"
-
           while IFS= read -r path; do
             git add -- "$path"
           done < ../expected-site-files.txt
-
           if git diff --cached --quiet; then
             echo "No allow-listed site changes to publish."
             exit 0
           fi
-
+          current_main="$(gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
+          [[ "$current_main" == "$SOURCE_SHA" ]] || {
+            echo "Private main advanced at publication boundary; refusing stale site publication."
+            exit 1
+          }
           git commit -m "Publish Patch Watch from ${SOURCE_SHA}"
           git push origin HEAD:main
