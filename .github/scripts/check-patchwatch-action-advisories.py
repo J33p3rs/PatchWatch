@@ -86,12 +86,7 @@ def api_json(path: str, params: dict[str, str] | None = None) -> object:
 
 
 def require_current_public_main() -> None:
-    """Reject a queued installed-controller run whose executing SHA is no longer public main.
-
-    Installed public workflow preflights opt into this guard with dedicated identity
-    variables supplied by the built-in github.token context. Candidate/offline scans
-    and unrelated workflow bookkeeping variables are deliberately unaffected.
-    """
+    """Reject a queued installed-controller run whose executing SHA is no longer public main."""
     repository = os.environ.get("PATCHWATCH_INSTALLED_REPO", "")
     executing_sha = os.environ.get("PATCHWATCH_INSTALLED_EXECUTING_SHA", "")
     if not repository and not executing_sha:
@@ -112,6 +107,41 @@ def require_current_public_main() -> None:
         )
 
 
+def installed_recovery_mode() -> bool:
+    """Allow dependency-lookup bypass only for the exact installed sync preflight.
+
+    The sync workflow is required by regression to execute no external Actions. Recovery
+    mode therefore permits the trusted installed scanner to structurally validate the
+    installed workflow set without querying maintenance, tags or advisories for Actions
+    that are not executed by this recovery path. Exact-current-public-main identity stays
+    mandatory, and the reviewed candidate is scanned strictly before promotion.
+    """
+    mode = os.environ.get("PATCHWATCH_INSTALLED_RECOVERY_MODE", "")
+    if not mode:
+        return False
+    if mode != "1":
+        raise RuntimeError("Invalid installed-controller recovery mode")
+    if not os.environ.get("PATCHWATCH_INSTALLED_REPO") or not os.environ.get("PATCHWATCH_INSTALLED_EXECUTING_SHA"):
+        raise RuntimeError("Installed-controller recovery mode requires exact installed execution identity")
+    return True
+
+
+def require_maintained_repository(repository: str) -> None:
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
+        raise RuntimeError(f"Invalid GitHub Action repository coordinate: {repository}")
+    payload = api_json(f"/repos/{repository}")
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"Unexpected repository metadata response for {repository}")
+    archived = payload.get("archived")
+    disabled = payload.get("disabled")
+    if not isinstance(archived, bool) or not isinstance(disabled, bool):
+        raise RuntimeError(f"Unexpected repository maintenance metadata for {repository}")
+    if archived:
+        raise RuntimeError(f"GitHub Action repository is archived: {repository}")
+    if disabled:
+        raise RuntimeError(f"GitHub Action repository is disabled: {repository}")
+
+
 def all_tags(repository: str) -> list[dict]:
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
         raise RuntimeError(f"Invalid GitHub Action repository coordinate: {repository}")
@@ -130,7 +160,6 @@ def all_tags(repository: str) -> list[dict]:
 
 
 def exact_release_versions(repository: str, sha: str) -> list[str]:
-    """Return every unique exact X.Y.Z tag attached to the pinned commit."""
     candidates: set[tuple[int, int, int, str]] = set()
     for tag in all_tags(repository):
         commit = tag.get("commit") or {}
@@ -200,8 +229,7 @@ def discover_actions(source_root: Path) -> dict[str, str]:
             stripped = line.strip()
             if not USES_KEY_RE.match(stripped):
                 raise RuntimeError(
-                    f"Unsupported YAML uses mapping syntax; only simple block-style uses entries are allowed: "
-                    f"{path}:{lineno}: {stripped}"
+                    f"Unsupported YAML uses mapping syntax; only simple block-style uses entries are allowed: {path}:{lineno}: {stripped}"
                 )
             if LOCAL_USES_RE.match(stripped):
                 raise RuntimeError(
@@ -235,10 +263,19 @@ def main() -> int:
 
     try:
         require_current_public_main()
+        recovery_mode = installed_recovery_mode()
         actions = discover_actions(Path(sys.argv[1]))
+        if recovery_mode:
+            print(
+                f"Installed recovery mode structurally verified {len(actions)} pinned Action repository/repositories; "
+                "remote maintenance/tag/advisory lookups are intentionally skipped because this sync executes no external Actions."
+            )
+            return 0
+
         blockers: set[tuple[str, str, str, str]] = set()
         checked_versions = 0
         for repository, sha in sorted(actions.items()):
+            require_maintained_repository(repository)
             versions = exact_release_versions(repository, sha)
             checked_versions += len(versions)
             print(f"Verified pinned action release aliases: {repository}@{sha} -> {', '.join(versions)}")

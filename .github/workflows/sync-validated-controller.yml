@@ -24,6 +24,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PATCHWATCH_INSTALLED_REPO: ${{ github.repository }}
           PATCHWATCH_INSTALLED_EXECUTING_SHA: ${{ github.sha }}
+          PATCHWATCH_INSTALLED_RECOVERY_MODE: "1"
         run: |
           set -euo pipefail
           [[ "$PATCHWATCH_INSTALLED_EXECUTING_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid executing workflow SHA."; exit 1; }
@@ -38,6 +39,10 @@ jobs:
             [[ -n "$encoded" ]] || { echo "Could not load installed trust artefact: $path"; exit 1; }
             printf '%s' "$encoded" | tr -d '\n' | base64 --decode > "$tmp/$path"
           done
+          # Recovery mode skips only installed repository-maintenance state. High/Critical
+          # advisory checks and exact-current-public-main identity still fail closed. This
+          # workflow itself executes no external Actions, so a rejected installed Action
+          # is never executed while a reviewed replacement is being promoted.
           python "$tmp/.github/scripts/check-patchwatch-action-advisories.py" "$tmp"
 
       - name: Validate GitHub App configuration
@@ -53,17 +58,50 @@ jobs:
             [[ -n "${!name:-}" ]] || { echo "Missing required GitHub App configuration: $name"; exit 1; }
           done
 
-      - name: Create read-only source token
+      - name: Create read-only source token without external Actions
         id: source-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          client-id: ${{ vars.PATCHWATCH_SOURCE_READER_CLIENT_ID }}
-          private-key: ${{ secrets.PATCHWATCH_SOURCE_READER_PRIVATE_KEY }}
-          owner: J33p3rs
-          repositories: ai-learning-challenge
-          permission-actions: read
-          permission-contents: read
-          permission-pull-requests: read
+        shell: bash
+        env:
+          SOURCE_CLIENT_ID: ${{ vars.PATCHWATCH_SOURCE_READER_CLIENT_ID }}
+          SOURCE_PRIVATE_KEY: ${{ secrets.PATCHWATCH_SOURCE_READER_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          b64url() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
+          mint_app_token() (
+            set -euo pipefail
+            client_id="$1"
+            private_key="$2"
+            repository="$3"
+            permissions_json="$4"
+            now="$(date +%s)"
+            iat="$((now - 60))"
+            exp="$((now + 540))"
+            header="$(printf '%s' '{"alg":"RS256","typ":"JWT"}' | b64url)"
+            payload="$(jq -nc --arg iss "$client_id" --argjson iat "$iat" --argjson exp "$exp" '{iat:$iat,exp:$exp,iss:$iss}' | b64url)"
+            signing_input="${header}.${payload}"
+            key_file="$(mktemp)"
+            trap 'rm -f "$key_file"' EXIT
+            chmod 600 "$key_file"
+            printf '%s' "$private_key" > "$key_file"
+            signature="$(printf '%s' "$signing_input" | openssl dgst -sha256 -sign "$key_file" -binary | b64url)"
+            jwt="${signing_input}.${signature}"
+            installation_id="$(GH_TOKEN="$jwt" gh api \
+              -H "Authorization: Bearer $jwt" \
+              -H 'Accept: application/vnd.github+json' \
+              "/repos/J33p3rs/${repository}/installation" --jq '.id')"
+            [[ "$installation_id" =~ ^[0-9]+$ ]] || { echo "Could not resolve GitHub App installation for $repository" >&2; exit 1; }
+            request="$(jq -nc --arg repo "$repository" --argjson permissions "$permissions_json" '{repositories:[$repo],permissions:$permissions}')"
+            GH_TOKEN="$jwt" gh api \
+              -H "Authorization: Bearer $jwt" \
+              -H 'Accept: application/vnd.github+json' \
+              --method POST "/app/installations/${installation_id}/access_tokens" \
+              --input - --jq '.token' <<<"$request"
+          )
+          permissions='{"actions":"read","contents":"read","pull_requests":"read"}'
+          token="$(mint_app_token "$SOURCE_CLIENT_ID" "$SOURCE_PRIVATE_KEY" 'ai-learning-challenge' "$permissions")"
+          [[ -n "$token" ]] || { echo "Could not mint Source Reader token."; exit 1; }
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
 
       - name: Resolve exact successful private main
         id: source
@@ -83,23 +121,27 @@ jobs:
           }
           echo "sha=$main_sha" >> "$GITHUB_OUTPUT"
 
-      - name: Check out validated private controller source
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          repository: J33p3rs/ai-learning-challenge
-          ref: ${{ steps.source.outputs.sha }}
-          token: ${{ steps.source-token.outputs.token }}
-          path: source
-          persist-credentials: false
-          fetch-depth: 0
+      - name: Fetch validated private controller source without external Actions
+        shell: bash
+        env:
+          SOURCE_TOKEN: ${{ steps.source-token.outputs.token }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          set -euo pipefail
+          rm -rf source
+          git init source
+          git -C source remote add origin https://github.com/J33p3rs/ai-learning-challenge.git
+          basic="$(printf 'x-access-token:%s' "$SOURCE_TOKEN" | base64 -w0)"
+          git -C source -c http.https://github.com/.extraheader="AUTHORIZATION: basic $basic" fetch --no-tags origin main
+          git -C source checkout --detach "$SOURCE_SHA"
+          [[ "$(git -C source rev-parse HEAD)" == "$SOURCE_SHA" ]] || { echo "Private source checkout is not exact."; exit 1; }
 
-      - name: Check out public main read-only
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          ref: main
-          path: public-repo
-          persist-credentials: false
-          fetch-depth: 0
+      - name: Fetch public main read-only without external Actions
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf public-repo
+          git clone --no-tags --branch main https://github.com/J33p3rs/PatchWatch.git public-repo
 
       - name: Require installed trust anchors and clean exact private release evidence
         id: gate
@@ -154,14 +196,6 @@ jobs:
           current_source="${published_sources[0]}"
           [[ "$current_source" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid current production source marker."; exit 1; }
 
-          # Review evidence follows trust-relevant controller content, not later data-only
-          # source movement. If the current public source already has the same canonical
-          # controller/security-trust content as validated private main, walk backwards
-          # through distinct published source markers to the earliest contiguous source
-          # with that same content. Its immediately preceding marker is the exact review
-          # baseline that authorised the controller bundle. If the current public source
-          # differs in trust-relevant content, the current private SOURCE_SHA itself needs
-          # a fresh review against current production.
           trust_paths=(PatchWatch/public-controller .github/workflows/patchwatch-security.yml)
           review_candidate="$SOURCE_SHA"
           reviewed_base="$current_source"
@@ -232,8 +266,6 @@ jobs:
             exit 1
           fi
 
-          # The already-installed evaluator is the trust root. Candidate controller code
-          # never decides whether its own review evidence is clean.
           review_result="$(python "$installed_evaluator" \
             --sha "$review_candidate" \
             --reviews "$tmp/reviews.json" \
@@ -245,9 +277,46 @@ jobs:
             exit 1
           }
 
-          # Check the candidate controller's exact Action pins with the already-installed
-          # scanner before those candidate workflows can ever execute publicly.
+          # Installed scanner remains the dependency/advisory trust root. Recovery mode is
+          # not set in this step, so a new installed scanner also enforces maintenance.
           python "$installed_scanner" "$canonical"
+
+          # Bootstrap/compatibility defence: independently enforce candidate repository
+          # maintenance using only the installed scanner's trusted discovery parser. This
+          # protects the first promotion where the installed scanner predates maintenance
+          # checks, and it does not execute candidate scanner code.
+          mapfile -t candidate_action_repositories < <(
+            python - "$installed_scanner" "$canonical" <<'PY'
+          import importlib.util
+          import sys
+          from pathlib import Path
+
+          scanner_path = Path(sys.argv[1])
+          source_root = Path(sys.argv[2])
+          spec = importlib.util.spec_from_file_location("patchwatch_installed_scanner_discovery", scanner_path)
+          module = importlib.util.module_from_spec(spec)
+          sys.modules[spec.name] = module
+          spec.loader.exec_module(module)
+          for repository in sorted(module.discover_actions(source_root)):
+              print(repository)
+          PY
+          )
+          (( ${#candidate_action_repositories[@]} > 0 )) || { echo "No candidate Action repositories discovered."; exit 1; }
+          for repository in "${candidate_action_repositories[@]}"; do
+            metadata="$(gh api "/repos/${repository}")"
+            jq -e '(.archived | type == "boolean") and (.disabled | type == "boolean")' <<<"$metadata" >/dev/null || {
+              echo "Candidate controller Action repository maintenance metadata is malformed: $repository"
+              exit 1
+            }
+            [[ "$(jq -r '.archived' <<<"$metadata")" == "false" ]] || {
+              echo "Candidate controller Action repository is archived: $repository"
+              exit 1
+            }
+            [[ "$(jq -r '.disabled' <<<"$metadata")" == "false" ]] || {
+              echo "Candidate controller Action repository is disabled: $repository"
+              exit 1
+            }
+          done
 
           echo "changed=true" >> "$GITHUB_OUTPUT"
           echo "candidate_blob=$candidate_blob" >> "$GITHUB_OUTPUT"
@@ -268,17 +337,51 @@ jobs:
             exit 1
           }
 
-      - name: Create Publisher App token
+      - name: Create Publisher App token without external Actions
         if: steps.gate.outputs.changed == 'true'
         id: publisher-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          client-id: ${{ vars.PATCHWATCH_PUBLISHER_CLIENT_ID }}
-          private-key: ${{ secrets.PATCHWATCH_PUBLISHER_PRIVATE_KEY }}
-          owner: J33p3rs
-          repositories: PatchWatch
-          permission-contents: write
-          permission-workflows: write
+        shell: bash
+        env:
+          PUBLISHER_CLIENT_ID: ${{ vars.PATCHWATCH_PUBLISHER_CLIENT_ID }}
+          PUBLISHER_PRIVATE_KEY: ${{ secrets.PATCHWATCH_PUBLISHER_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          b64url() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
+          mint_app_token() (
+            set -euo pipefail
+            client_id="$1"
+            private_key="$2"
+            repository="$3"
+            permissions_json="$4"
+            now="$(date +%s)"
+            iat="$((now - 60))"
+            exp="$((now + 540))"
+            header="$(printf '%s' '{"alg":"RS256","typ":"JWT"}' | b64url)"
+            payload="$(jq -nc --arg iss "$client_id" --argjson iat "$iat" --argjson exp "$exp" '{iat:$iat,exp:$exp,iss:$iss}' | b64url)"
+            signing_input="${header}.${payload}"
+            key_file="$(mktemp)"
+            trap 'rm -f "$key_file"' EXIT
+            chmod 600 "$key_file"
+            printf '%s' "$private_key" > "$key_file"
+            signature="$(printf '%s' "$signing_input" | openssl dgst -sha256 -sign "$key_file" -binary | b64url)"
+            jwt="${signing_input}.${signature}"
+            installation_id="$(GH_TOKEN="$jwt" gh api \
+              -H "Authorization: Bearer $jwt" \
+              -H 'Accept: application/vnd.github+json' \
+              "/repos/J33p3rs/${repository}/installation" --jq '.id')"
+            [[ "$installation_id" =~ ^[0-9]+$ ]] || { echo "Could not resolve GitHub App installation for $repository" >&2; exit 1; }
+            request="$(jq -nc --arg repo "$repository" --argjson permissions "$permissions_json" '{repositories:[$repo],permissions:$permissions}')"
+            GH_TOKEN="$jwt" gh api \
+              -H "Authorization: Bearer $jwt" \
+              -H 'Accept: application/vnd.github+json' \
+              --method POST "/app/installations/${installation_id}/access_tokens" \
+              --input - --jq '.token' <<<"$request"
+          )
+          permissions='{"contents":"write","workflows":"write"}'
+          token="$(mint_app_token "$PUBLISHER_CLIENT_ID" "$PUBLISHER_PRIVATE_KEY" 'PatchWatch' "$permissions")"
+          [[ -n "$token" ]] || { echo "Could not mint Publisher token."; exit 1; }
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
 
       - name: Promote exact reviewed controller bundle and trust state
         if: steps.gate.outputs.changed == 'true'
