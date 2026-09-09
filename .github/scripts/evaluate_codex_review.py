@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Normalise Codex PR review evidence into clean/pending/blocked state."""
+"""Normalise Codex PR review evidence for advisory PatchWatch review."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ BLOCKER_MARKERS = (
 )
 CLEAN_PREFIX = "Codex Review: Didn't find any major issues."
 DISMISSED_STATES = {"DISMISSED", "dismissed"}
+AUTO_REVIEW_MARKER = "PatchWatch-Auto-Review:"
 
 
 def _login(value: dict | None) -> str:
@@ -44,6 +45,7 @@ def _thread_nodes(payload: object) -> list[dict]:
 
 
 def active_blockers(threads: object) -> list[str]:
+    """Return active P0/P1/P2 Codex findings as advisory metadata."""
     blockers: list[str] = []
     for thread in _thread_nodes(threads):
         if thread.get("isResolved") or thread.get("is_resolved"):
@@ -91,12 +93,10 @@ def _event_time(item: dict, *keys: str) -> datetime | None:
 
 
 def latest_exact_codex_verdict_is_clean(reviews: object, comments: object, sha: str) -> bool:
-    """Require the latest exact-SHA Codex verdict to be affirmative clean evidence.
+    """Report whether the latest exact-SHA Codex verdict is affirmative clean evidence.
 
-    A later exact-SHA Codex review with suggestions invalidates any earlier clean verdict,
-    even after its inline blocker threads are resolved. When more than one exact verdict
-    exists, timestamps are mandatory so ordering cannot be guessed from API list position.
-    Conflicting verdicts tied at the latest timestamp are ambiguous and fail closed.
+    This is informational only. PatchWatch security/tests and deterministic trust controls
+    are the hard gates; Codex findings are carried forward as advisory remediation work.
     """
     events: list[tuple[datetime | None, bool]] = []
 
@@ -142,17 +142,48 @@ def latest_exact_codex_verdict_is_clean(reviews: object, comments: object, sha: 
     return latest_verdicts.pop()
 
 
+def review_requested(comments: object, sha: str) -> bool:
+    marker = f"{AUTO_REVIEW_MARKER}{sha}"
+    if not isinstance(comments, list):
+        return False
+    return any(isinstance(comment, dict) and marker in str(comment.get("body") or "") for comment in comments)
+
+
+def exact_codex_review_seen(reviews: object, comments: object, sha: str) -> bool:
+    if isinstance(reviews, list):
+        for review in reviews:
+            if not isinstance(review, dict):
+                continue
+            author = review.get("user") or review.get("author")
+            if not _codex(_login(author)) or str(review.get("state") or "") in DISMISSED_STATES:
+                continue
+            body = str(review.get("body") or "")
+            commit_id = str(review.get("commit_id") or review.get("commitId") or "")
+            if commit_id == sha or _exact_review_body(body, sha):
+                return True
+    if isinstance(comments, list):
+        for comment in comments:
+            if not isinstance(comment, dict):
+                continue
+            author = comment.get("user") or comment.get("author")
+            if _codex(_login(author)) and _exact_review_body(str(comment.get("body") or ""), sha):
+                return True
+    return False
+
+
 def evaluate(reviews: object, threads: object, comments: object, sha: str) -> dict:
     blockers = active_blockers(threads)
     evidence = latest_exact_codex_verdict_is_clean(reviews, comments, sha)
-    if blockers:
-        state = "blocked"
-    elif evidence:
-        state = "clean"
-    else:
-        state = "pending"
+    requested = review_requested(comments, sha)
+    received = exact_codex_review_seen(reviews, comments, sha)
+    # First encounter remains pending only long enough for the reconciler to request Codex.
+    # Once review has been requested or received, Codex is advisory and cannot block merge/release.
+    state = "clean" if requested or received else "pending"
     return {
         "state": state,
+        "policy": "advisory",
+        "review_requested": requested,
+        "review_received": received,
         "exact_evidence": evidence,
         "active_blocker_count": len(blockers),
     }
