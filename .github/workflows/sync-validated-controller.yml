@@ -266,6 +266,7 @@ jobs:
           owner: J33p3rs
           repositories: PatchWatch
           permission-contents: write
+          permission-workflows: write
 
       - name: Promote exact reviewed controller bundle and trust state
         if: steps.gate.outputs.changed == 'true'
