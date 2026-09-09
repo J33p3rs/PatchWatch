@@ -28,6 +28,9 @@ walk = lambda do |node|
     (0...children.length).step(2) do |index|
       key = children[index]
       value = children[index + 1]
+      if key.is_a?(Psych::Nodes::Alias)
+        raise "YAML alias mapping keys are unsupported"
+      end
       if key.is_a?(Psych::Nodes::Scalar) && key.value == "uses"
         unless value.is_a?(Psych::Nodes::Scalar)
           raise "uses value must be a scalar"
