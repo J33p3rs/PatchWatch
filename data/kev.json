@@ -3,9 +3,9 @@
     "source": "CISA Known Exploited Vulnerabilities catalog",
     "source_repository": "https://github.com/cisagov/kev-data",
     "source_branch": "develop",
-    "catalog_version": "2026.09.04",
-    "catalog_date_released": "2026-09-04T16:47:03.5197Z",
-    "generated": "2026-09-06",
+    "catalog_version": "2026.09.11",
+    "catalog_date_released": "2026-09-11T19:32:16.8993Z",
+    "generated": "2026-09-13",
     "metric": "CVEs added to CISA KEV per calendar month, grouped by dateAdded",
     "coverage_start": "2021-11",
     "coverage_end": "2026-09",
@@ -150,7 +150,7 @@
           "vulnerability_name": "Microsoft Win32k Privilege Escalation Vulnerability",
           "date_added": "2021-11-03",
           "due_date": "2022-05-03",
-          "known_ransomware_campaign_use": "Unknown"
+          "known_ransomware_campaign_use": "Known"
         },
         {
           "cve_id": "CVE-2016-9563",
@@ -492,7 +492,7 @@
           "vulnerability_name": "Microsoft Win32k Privilege Escalation Vulnerability",
           "date_added": "2021-11-03",
           "due_date": "2022-05-03",
-          "known_ransomware_campaign_use": "Unknown"
+          "known_ransomware_campaign_use": "Known"
         },
         {
           "cve_id": "CVE-2019-0863",
@@ -7632,7 +7632,7 @@
           "vulnerability_name": "Synacor Zimbra Collaboration Suite (ZCS) Arbitrary File Upload Vulnerability",
           "date_added": "2022-10-20",
           "due_date": "2022-11-10",
-          "known_ransomware_campaign_use": "Unknown"
+          "known_ransomware_campaign_use": "Known"
         },
         {
           "cve_id": "CVE-2018-19320",
@@ -13647,7 +13647,7 @@
           "vulnerability_name": "WatchGuard Firebox Out of Bounds Write Vulnerability",
           "date_added": "2025-12-19",
           "due_date": "2025-12-26",
-          "known_ransomware_campaign_use": "Unknown"
+          "known_ransomware_campaign_use": "Known"
         },
         {
           "cve_id": "CVE-2023-52163",
@@ -15255,7 +15255,7 @@
           "vulnerability_name": "Cisco Secure Firewall Management Center Use of Hard-coded Password Vulnerability",
           "date_added": "2026-07-29",
           "due_date": "2026-08-01",
-          "known_ransomware_campaign_use": "Unknown"
+          "known_ransomware_campaign_use": "Known"
         }
       ]
     },
@@ -15378,7 +15378,7 @@
           "vulnerability_name": "Broadcom VMware vCenter Path Traversal Vulnerability",
           "date_added": "2026-08-18",
           "due_date": "2026-08-21",
-          "known_ransomware_campaign_use": "Unknown"
+          "known_ransomware_campaign_use": "Known"
         },
         {
           "cve_id": "CVE-2026-65400",
@@ -15546,7 +15546,7 @@
     },
     {
       "month": "2026-09",
-      "kev_added_cves": 8,
+      "kev_added_cves": 22,
       "cves": [
         {
           "cve_id": "CVE-2026-48710",
@@ -15619,6 +15619,132 @@
           "date_added": "2026-09-04",
           "due_date": "2026-09-18",
           "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-75650",
+          "vendor_project": "Adobe",
+          "product": "Commerce and Magento",
+          "vulnerability_name": "Adobe Commerce and Magento Improper Neutralization of Special Elements Used in a Template Engine Vulnerability",
+          "date_added": "2026-09-08",
+          "due_date": "2026-09-11",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-81963",
+          "vendor_project": "Microsoft",
+          "product": "Windows",
+          "vulnerability_name": "Microsoft Windows Link Following Vulnerability",
+          "date_added": "2026-09-08",
+          "due_date": "2026-09-22",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-85880",
+          "vendor_project": "Microsoft",
+          "product": "Windows",
+          "vulnerability_name": "Microsoft Windows Heap-Based Buffer Overflow Vulnerability",
+          "date_added": "2026-09-08",
+          "due_date": "2026-09-22",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-86218",
+          "vendor_project": "N-able",
+          "product": "N-central",
+          "vulnerability_name": "N-able N-central Static Code Injection Vulnerability",
+          "date_added": "2026-09-08",
+          "due_date": "2026-09-11",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2025-25249",
+          "vendor_project": "Fortinet",
+          "product": "Multiple Products",
+          "vulnerability_name": "Fortinet Multiple Products Heap-based Buffer Overflow Vulnerability",
+          "date_added": "2026-09-09",
+          "due_date": "2026-09-12",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-19490",
+          "vendor_project": "Citrix",
+          "product": "NetScaler",
+          "vulnerability_name": "Citrix NetScaler Authentication Bypass Using an Alternate Path or Channel Vulnerability",
+          "date_added": "2026-09-09",
+          "due_date": "2026-09-12",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-20079",
+          "vendor_project": "Cisco",
+          "product": "Secure Firewall Management Center (FMC) and Security Cloud Control (SCC) Firewall Management",
+          "vulnerability_name": "Cisco Firewall Management Center Authentication Bypass Using an Alternate Path or Channel Vulnerability",
+          "date_added": "2026-09-09",
+          "due_date": "2026-09-12",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-87491",
+          "vendor_project": "Google",
+          "product": "Chromium V8",
+          "vulnerability_name": "Google Chromium V8 Out of Bounds Write Vulnerability",
+          "date_added": "2026-09-09",
+          "due_date": "2026-09-23",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-67277",
+          "vendor_project": "MikroTik",
+          "product": "RouterOS",
+          "vulnerability_name": "MikroTik RouterOS Missing Authentication for Critical Function Vulnerability",
+          "date_added": "2026-09-10",
+          "due_date": "2026-09-13",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-86060",
+          "vendor_project": "MikroTik",
+          "product": "RouterOS",
+          "vulnerability_name": "MikroTik RouterOS Improper Neutralization of Argument Delimiters in a Command Vulnerability",
+          "date_added": "2026-09-10",
+          "due_date": "2026-09-13",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-42016",
+          "vendor_project": "JFrog",
+          "product": "Artifactory",
+          "vulnerability_name": "JFrog Artifactory Incorrect Authorization Vulnerability",
+          "date_added": "2026-09-11",
+          "due_date": "2026-09-25",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-42018",
+          "vendor_project": "JFrog",
+          "product": "Artifactory",
+          "vulnerability_name": "JFrog Artifactory Improper Authentication Vulnerability",
+          "date_added": "2026-09-11",
+          "due_date": "2026-09-25",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-84869",
+          "vendor_project": "ConnectWise",
+          "product": "ScreenConnect",
+          "vulnerability_name": "ConnectWise ScreenConnect Improper Privilege Management and Missing Authorization Vulnerability",
+          "date_added": "2026-09-11",
+          "due_date": "2026-09-14",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-85706",
+          "vendor_project": "GitLab",
+          "product": "Community Edition and Enterprise Edition",
+          "vulnerability_name": "GitLab Community Edition and Enterprise Edition Path Traversal Vulnerability",
+          "date_added": "2026-09-11",
+          "due_date": "2026-09-14",
+          "known_ransomware_campaign_use": "Unknown"
         }
       ]
     }
@@ -15646,7 +15772,7 @@
     },
     {
       "year": 2026,
-      "kev_added_cves": 211,
+      "kev_added_cves": 225,
       "partial_year": true
     }
   ]

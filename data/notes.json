@@ -133,15 +133,15 @@
           "key": "nvd",
           "label": "NVD",
           "group": "global",
-          "value": 12269,
+          "value": 12262,
           "previous_value": 9770,
           "same_month_last_year": 3628,
           "trailing_6_month_average": 6885.3,
-          "versus_previous_pct": 25.6,
-          "versus_last_year_pct": 238.2,
-          "versus_trailing_average_pct": 78.2,
+          "versus_previous_pct": 25.5,
+          "versus_last_year_pct": 238.0,
+          "versus_trailing_average_pct": 78.1,
           "trend": "elevated",
-          "notability_score": 95.3
+          "notability_score": 95.2
         },
         {
           "key": "kev",
