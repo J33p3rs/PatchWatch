@@ -2,7 +2,7 @@
   "metadata": {
     "vendor": "Apple",
     "platform": "iOS",
-    "generated": "2026-09-06",
+    "generated": "2026-09-13",
     "metric": "Unique CVEs documented in Apple security advisories for iOS releases in each calendar month",
     "metric_label": "iOS security CVEs",
     "source": "Apple security releases and linked security advisories",
@@ -2217,7 +2217,7 @@
     {
       "month": "2026-09",
       "ios_security_cves": 0,
-      "apple_release_advisories": 0,
+      "apple_release_advisories": 1,
       "cves": []
     }
   ],
