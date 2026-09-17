@@ -388,6 +388,7 @@ jobs:
         shell: bash
         env:
           PUBLISHER_TOKEN: ${{ steps.publisher-token.outputs.token }}
+          SOURCE_TOKEN: ${{ steps.source-token.outputs.token }}
           SOURCE_SHA: ${{ steps.source.outputs.sha }}
           REVIEW_CANDIDATE: ${{ steps.gate.outputs.review_candidate }}
           CANDIDATE_SECURITY_BLOB: ${{ steps.gate.outputs.candidate_blob }}
@@ -412,6 +413,12 @@ jobs:
           git -C public-repo diff --cached --check
           git -C public-repo commit -m "Sync Patch Watch controller from ${SOURCE_SHA} (reviewed ${REVIEW_CANDIDATE})"
           git -C public-repo remote set-url origin "https://x-access-token:${PUBLISHER_TOKEN}@github.com/J33p3rs/PatchWatch.git"
+
+          current_main="$(GH_TOKEN="$SOURCE_TOKEN" gh api '/repos/J33p3rs/ai-learning-challenge/commits/main' --jq '.sha')"
+          [[ "$current_main" == "$SOURCE_SHA" ]] || {
+            echo "Private main advanced after controller staging; refusing stale controller promotion."
+            exit 1
+          }
           git -C public-repo push origin HEAD:main
 
       - name: Dispatch publisher after controller promotion
