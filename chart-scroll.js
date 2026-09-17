@@ -26,4 +26,5 @@ function observeInitialChart(selector) {
 }
 
 observeInitialChart("#monthly-chart");
+observeInitialChart("#annual-chart");
 observeInitialChart("#comparison-chart");
