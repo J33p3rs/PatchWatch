@@ -3,12 +3,12 @@
     "source": "CISA Known Exploited Vulnerabilities catalog",
     "source_repository": "https://github.com/cisagov/kev-data",
     "source_branch": "develop",
-    "catalog_version": "2026.09.11",
-    "catalog_date_released": "2026-09-11T19:32:16.8993Z",
-    "generated": "2026-09-13",
+    "catalog_version": "2026.10.02",
+    "catalog_date_released": "2026-10-02T15:19:38.2945Z",
+    "generated": "2026-10-04",
     "metric": "CVEs added to CISA KEV per calendar month, grouped by dateAdded",
     "coverage_start": "2021-11",
-    "coverage_end": "2026-09",
+    "coverage_end": "2026-10",
     "view_group": "global",
     "include_in_all": false
   },
@@ -15306,7 +15306,7 @@
           "vulnerability_name": "JetBrains TeamCity Deserialization of Untrusted Data Vulnerability",
           "date_added": "2026-08-05",
           "due_date": "2026-08-08",
-          "known_ransomware_campaign_use": "Unknown"
+          "known_ransomware_campaign_use": "Known"
         },
         {
           "cve_id": "CVE-2026-8037",
@@ -15546,7 +15546,7 @@
     },
     {
       "month": "2026-09",
-      "kev_added_cves": 22,
+      "kev_added_cves": 43,
       "cves": [
         {
           "cve_id": "CVE-2026-48710",
@@ -15745,6 +15745,228 @@
           "date_added": "2026-09-11",
           "due_date": "2026-09-14",
           "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-76461",
+          "vendor_project": "Cisco",
+          "product": "Secure Email Gateway",
+          "vulnerability_name": "Cisco Secure Email Gateway SQL Injection Vulnerability",
+          "date_added": "2026-09-14",
+          "due_date": "2026-09-17",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-58704",
+          "vendor_project": "Google",
+          "product": "Pixel",
+          "vulnerability_name": "Google Pixel Improper Authorization Vulnerability",
+          "date_added": "2026-09-16",
+          "due_date": "2026-09-19",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-76460",
+          "vendor_project": "Cisco",
+          "product": "Identity Services Engine",
+          "vulnerability_name": "Cisco Identity Services Engine Incorrect Use of Privileged APIs Vulnerability",
+          "date_added": "2026-09-16",
+          "due_date": "2026-09-19",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-87886",
+          "vendor_project": "Acronis",
+          "product": "Backup",
+          "vulnerability_name": "Acronis Backup Incorrect Default Permissions Vulnerability",
+          "date_added": "2026-09-16",
+          "due_date": "2026-09-19",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2025-39682",
+          "vendor_project": "Linux",
+          "product": "Kernel",
+          "vulnerability_name": "Linux Kernel Improper Check for Unusual or Exceptional Conditions Vulnerability",
+          "date_added": "2026-09-18",
+          "due_date": "2026-09-21",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2025-39964",
+          "vendor_project": "Linux",
+          "product": "Kernel",
+          "vulnerability_name": "Linux Kernel Race Condition Vulnerability",
+          "date_added": "2026-09-18",
+          "due_date": "2026-09-21",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-53266",
+          "vendor_project": "Linux",
+          "product": "Kernel",
+          "vulnerability_name": "Linux Kernel Out-of-Bounds Write Vulnerability",
+          "date_added": "2026-09-18",
+          "due_date": "2026-09-21",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-7273",
+          "vendor_project": "Zyxel",
+          "product": "GS1900 Series Switches",
+          "vulnerability_name": "Zyxel GS1900 Series Switches Stack-Based Buffer Overflow Vulnerability",
+          "date_added": "2026-09-21",
+          "due_date": "2026-09-24",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-85102",
+          "vendor_project": "Check Point",
+          "product": "Multiple Products",
+          "vulnerability_name": "Check Point Multiple Products Improper Certificate Validation Vulnerability",
+          "date_added": "2026-09-22",
+          "due_date": "2026-09-25",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-93616",
+          "vendor_project": "Check Point",
+          "product": "Multiple Products",
+          "vulnerability_name": "Check Point Multiple Products Path Traversal Vulnerability",
+          "date_added": "2026-09-22",
+          "due_date": "2026-09-25",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-93952",
+          "vendor_project": "Arista",
+          "product": "VeloCloud Orchestrator",
+          "vulnerability_name": "Arista VeloCloud Orchestrator Improper Input Validation Vulnerability",
+          "date_added": "2026-09-22",
+          "due_date": "2026-09-25",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-94127",
+          "vendor_project": "F5",
+          "product": "BIG-IP APM",
+          "vulnerability_name": "F5 BIG-IP APM Heap-based Buffer Overflow Vulnerability",
+          "date_added": "2026-09-22",
+          "due_date": "2026-09-25",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-5430",
+          "vendor_project": "WSO2",
+          "product": "Multiple Products",
+          "vulnerability_name": "WSO2 Multiple Products Path Traversal Vulnerability ",
+          "date_added": "2026-09-24",
+          "due_date": "2026-09-27",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-71362",
+          "vendor_project": "Adobe",
+          "product": "Commerce and Magento ",
+          "vulnerability_name": "Adobe Commerce and Magento Incorrect Authorization Vulnerability ",
+          "date_added": "2026-09-24",
+          "due_date": "2026-09-27",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-65660",
+          "vendor_project": "Microsoft",
+          "product": "SharePoint",
+          "vulnerability_name": "Microsoft SharePoint Code Injection Vulnerability",
+          "date_added": "2026-09-25",
+          "due_date": "2026-09-28",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-67279",
+          "vendor_project": "MikroTik",
+          "product": "RouterOS",
+          "vulnerability_name": "Mikrotik RouterOS Improper Enforcement of Behavioral Workflow Vulnerability",
+          "date_added": "2026-09-25",
+          "due_date": "2026-09-28",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-87902",
+          "vendor_project": "WordPress",
+          "product": "Core",
+          "vulnerability_name": "WordPress Core Remote File Inclusion Vulnerability",
+          "date_added": "2026-09-25",
+          "due_date": "2026-09-28",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-88771",
+          "vendor_project": "Citrix",
+          "product": "NetScaler",
+          "vulnerability_name": "Citrix NetScaler Improper Input Validation Vulnerability",
+          "date_added": "2026-09-27",
+          "due_date": "2026-09-30",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-88772",
+          "vendor_project": "Citrix",
+          "product": "NetScaler",
+          "vulnerability_name": "Citrix NetScaler Improper Restriction of Operations within the Bounds of a Memory Buffer Vulnerability",
+          "date_added": "2026-09-27",
+          "due_date": "2026-09-30",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-86950",
+          "vendor_project": "Apple",
+          "product": "Multiple Products",
+          "vulnerability_name": "Apple Multiple Products Out-of-Bounds Write Vulnerability",
+          "date_added": "2026-09-29",
+          "due_date": "2026-10-02",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-76504",
+          "vendor_project": "Cisco",
+          "product": "Catalyst SD-WAN Manager",
+          "vulnerability_name": "Cisco Catalyst SD-WAN Manager Hex Encoding Vulnerability",
+          "date_added": "2026-09-30",
+          "due_date": "2026-10-03",
+          "known_ransomware_campaign_use": "Unknown"
+        }
+      ]
+    },
+    {
+      "month": "2026-10",
+      "kev_added_cves": 3,
+      "cves": [
+        {
+          "cve_id": "CVE-2026-104286",
+          "vendor_project": "Fortinet",
+          "product": "FortiMail",
+          "vulnerability_name": "Fortinet FortiMail Path Traversal Vulnerability",
+          "date_added": "2026-10-01",
+          "due_date": "2026-10-04",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-102489",
+          "vendor_project": "Zammad GmbH",
+          "product": "Zammad",
+          "vulnerability_name": "Zammad GmbH Zammad Session Fixation Vulnerability",
+          "date_added": "2026-10-02",
+          "due_date": "2026-10-05",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-102490",
+          "vendor_project": "Zammad GmbH",
+          "product": "Zammad",
+          "vulnerability_name": "Zammad GmbH Zammad Improper Privilege Management Vulnerability",
+          "date_added": "2026-10-02",
+          "due_date": "2026-10-05",
+          "known_ransomware_campaign_use": "Unknown"
         }
       ]
     }
@@ -15772,7 +15994,7 @@
     },
     {
       "year": 2026,
-      "kev_added_cves": 225,
+      "kev_added_cves": 249,
       "partial_year": true
     }
   ]

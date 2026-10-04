@@ -1,27 +1,15 @@
 {
   "metadata": {
     "vendor": "Fortinet",
-    "generated": "2026-09-13",
+    "generated": "2026-10-04",
     "metric": "Fortinet-assigned CNA CVEs published in each calendar month",
     "metric_label": "Fortinet CNA CVEs",
     "source": "CVEProject/cvelistV5",
     "source_url": "https://github.com/CVEProject/cvelistV5",
-    "coverage": "2021-10 through 2026-09",
+    "coverage": "2021-11 through 2026-10",
     "methodology_note": "Calendar-month disclosure volume includes both regular monthly PSIRT disclosures and out-of-cycle Fortinet CNA publications. It is not presented as a direct equivalent of Microsoft Patch Tuesday release counts."
   },
   "monthly": [
-    {
-      "month": "2021-10",
-      "fortinet_cna_cves": 6,
-      "cves": [
-        "CVE-2020-15941",
-        "CVE-2021-24019",
-        "CVE-2021-24021",
-        "CVE-2021-36170",
-        "CVE-2021-36175",
-        "CVE-2021-36178"
-      ]
-    },
     {
       "month": "2021-11",
       "fortinet_cna_cves": 20,
@@ -1191,18 +1179,26 @@
     },
     {
       "month": "2026-09",
-      "fortinet_cna_cves": 10,
+      "fortinet_cna_cves": 11,
       "cves": [
         "CVE-2026-22575",
         "CVE-2026-26084",
         "CVE-2026-84385",
         "CVE-2026-84386",
         "CVE-2026-84387",
+        "CVE-2026-84388",
         "CVE-2026-84389",
         "CVE-2026-84390",
         "CVE-2026-84391",
         "CVE-2026-84392",
         "CVE-2026-84393"
+      ]
+    },
+    {
+      "month": "2026-10",
+      "fortinet_cna_cves": 1,
+      "cves": [
+        "CVE-2026-104286"
       ]
     }
   ],
@@ -1229,9 +1225,9 @@
     },
     {
       "year": 2026,
-      "fortinet_cna_cves": 109,
+      "fortinet_cna_cves": 111,
       "partial_year": true,
-      "through_month": "2026-09"
+      "through_month": "2026-10"
     }
   ]
 }

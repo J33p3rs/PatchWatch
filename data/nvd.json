@@ -2,8 +2,8 @@
   "metadata": {
     "source": "National Vulnerability Database (NVD) CVE API 2.0",
     "source_url": "https://nvd.nist.gov/developers/vulnerabilities",
-    "generated": "2026-09-13",
-    "coverage": "2021-10 through 2026-09",
+    "generated": "2026-10-04",
+    "coverage": "2021-11 through 2026-10",
     "metric": "Non-rejected CVEs published in NVD per calendar month",
     "metric_label": "NVD published CVEs",
     "view_group": "global",
@@ -11,10 +11,6 @@
     "methodology_note": "Uses the NVD CVE API 2.0 publication-date filter for each calendar month with noRejected. The API's totalResults value is the monthly headline count. NVD is an ecosystem-wide index and is intentionally excluded from the vendor/platform All total."
   },
   "monthly": [
-    {
-      "month": "2021-10",
-      "nvd_published_cves": 1701
-    },
     {
       "month": "2021-11",
       "nvd_published_cves": 1508
@@ -45,7 +41,7 @@
     },
     {
       "month": "2022-06",
-      "nvd_published_cves": 2280
+      "nvd_published_cves": 2279
     },
     {
       "month": "2022-07",
@@ -213,7 +209,7 @@
     },
     {
       "month": "2025-12",
-      "nvd_published_cves": 5493
+      "nvd_published_cves": 5492
     },
     {
       "month": "2026-01",
@@ -233,11 +229,11 @@
     },
     {
       "month": "2026-05",
-      "nvd_published_cves": 6939
+      "nvd_published_cves": 6937
     },
     {
       "month": "2026-06",
-      "nvd_published_cves": 7943
+      "nvd_published_cves": 7942
     },
     {
       "month": "2026-07",
@@ -245,17 +241,21 @@
     },
     {
       "month": "2026-08",
-      "nvd_published_cves": 12262
+      "nvd_published_cves": 12258
     },
     {
       "month": "2026-09",
-      "nvd_published_cves": 5591
+      "nvd_published_cves": 14942
+    },
+    {
+      "month": "2026-10",
+      "nvd_published_cves": 914
     }
   ],
   "annual": [
     {
       "year": 2022,
-      "nvd_published_cves": 25074,
+      "nvd_published_cves": 25073,
       "partial_year": false
     },
     {
@@ -270,12 +270,12 @@
     },
     {
       "year": 2025,
-      "nvd_published_cves": 48153,
+      "nvd_published_cves": 48152,
       "partial_year": false
     },
     {
       "year": 2026,
-      "nvd_published_cves": 63467,
+      "nvd_published_cves": 73725,
       "partial_year": true
     }
   ]
