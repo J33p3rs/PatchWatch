@@ -3,9 +3,9 @@
     "source": "CISA Known Exploited Vulnerabilities catalog",
     "source_repository": "https://github.com/cisagov/kev-data",
     "source_branch": "develop",
-    "catalog_version": "2026.10.02",
-    "catalog_date_released": "2026-10-02T15:19:38.2945Z",
-    "generated": "2026-10-04",
+    "catalog_version": "2026.10.08",
+    "catalog_date_released": "2026-10-08T20:09:18.9833Z",
+    "generated": "2026-10-11",
     "metric": "CVEs added to CISA KEV per calendar month, grouped by dateAdded",
     "coverage_start": "2021-11",
     "coverage_end": "2026-10",
@@ -15485,7 +15485,7 @@
           "product": "Kernel",
           "vulnerability_name": "Linux Kernel Out-of-Bounds Write Vulnerability",
           "date_added": "2026-08-26",
-          "due_date": "2026-09-09",
+          "due_date": "2026-08-29",
           "known_ransomware_campaign_use": "Unknown"
         },
         {
@@ -15923,7 +15923,7 @@
           "product": "Multiple Products",
           "vulnerability_name": "Apple Multiple Products Out-of-Bounds Write Vulnerability",
           "date_added": "2026-09-29",
-          "due_date": "2026-10-02",
+          "due_date": "2026-10-13",
           "known_ransomware_campaign_use": "Unknown"
         },
         {
@@ -15939,7 +15939,7 @@
     },
     {
       "month": "2026-10",
-      "kev_added_cves": 3,
+      "kev_added_cves": 9,
       "cves": [
         {
           "cve_id": "CVE-2026-104286",
@@ -15966,6 +15966,60 @@
           "vulnerability_name": "Zammad GmbH Zammad Improper Privilege Management Vulnerability",
           "date_added": "2026-10-02",
           "due_date": "2026-10-05",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-88779",
+          "vendor_project": "Citrix",
+          "product": "NetScaler",
+          "vulnerability_name": "Citrix NetScaler Improper Restriction of Operations within the Bounds of a Memory Buffer Vulnerability",
+          "date_added": "2026-10-04",
+          "due_date": "2026-10-07",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2015-3306",
+          "vendor_project": "ProFTPD",
+          "product": "ProFTPD",
+          "vulnerability_name": "ProFTPD Improper Access Control Vulnerability",
+          "date_added": "2026-10-08",
+          "due_date": "2026-10-11",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2015-5477",
+          "vendor_project": "ISC",
+          "product": "BIND",
+          "vulnerability_name": " ISC BIND Data Processing Errors Vulnerability",
+          "date_added": "2026-10-08",
+          "due_date": "2026-10-11",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2016-3081",
+          "vendor_project": "Apache",
+          "product": "Struts",
+          "vulnerability_name": "Apache Struts Command Injection Vulnerability",
+          "date_added": "2026-10-08",
+          "due_date": "2026-10-11",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2021-3199",
+          "vendor_project": "ONLYOFFICE",
+          "product": "Docs",
+          "vulnerability_name": "ONLYOFFICE Docs Server Path Traversal Vulnerability",
+          "date_added": "2026-10-08",
+          "due_date": "2026-10-11",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2023-22894",
+          "vendor_project": "Strapi",
+          "product": "Strapi",
+          "vulnerability_name": "Strapi Cleartext Storage of Sensitive Information Vulnerability",
+          "date_added": "2026-10-08",
+          "due_date": "2026-10-11",
           "known_ransomware_campaign_use": "Unknown"
         }
       ]
@@ -15994,7 +16048,7 @@
     },
     {
       "year": 2026,
-      "kev_added_cves": 249,
+      "kev_added_cves": 255,
       "partial_year": true
     }
   ]
