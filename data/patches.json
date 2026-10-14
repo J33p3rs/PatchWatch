@@ -273,7 +273,7 @@
     },
     {
       "month": "2026-10",
-      "new_microsoft_cves": 415
+      "new_microsoft_cves": 1415
     }
   ],
   "annual": [
@@ -295,7 +295,7 @@
     },
     {
       "year": 2026,
-      "new_microsoft_cves": 3109,
+      "new_microsoft_cves": 4109,
       "partial_year": true,
       "through_month": "2026-10"
     }
