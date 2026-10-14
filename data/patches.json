@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "generated": "2026-09-09",
-    "monthly_window": "2021-10 to 2026-09",
+    "generated": "2026-10-14",
+    "monthly_window": "2021-11 to 2026-10",
     "months": 60,
     "headline_metric": "new_microsoft_cves",
     "headline_metric_definition": "New Microsoft CVEs counted at Patch Tuesday release time; excludes republished third-party/Chromium CVEs and, where the release-day source does so, items already resolved by Microsoft.",
@@ -24,13 +24,9 @@
         "coverage": "Validated comparison counts retained for 2026-01 through 2026-08"
       }
     },
-    "latest_source_url": "https://www.zerodayinitiative.com/blog/2026/9/8/the-september-2026-security-update-review"
+    "latest_source_url": "https://www.zerodayinitiative.com/blog/2026/10/13/the-october-2026-security-update-review"
   },
   "monthly": [
-    {
-      "month": "2021-10",
-      "new_microsoft_cves": 71
-    },
     {
       "month": "2021-11",
       "new_microsoft_cves": 55
@@ -274,6 +270,10 @@
     {
       "month": "2026-09",
       "new_microsoft_cves": 972
+    },
+    {
+      "month": "2026-10",
+      "new_microsoft_cves": 415
     }
   ],
   "annual": [
@@ -295,9 +295,9 @@
     },
     {
       "year": 2026,
-      "new_microsoft_cves": 2694,
+      "new_microsoft_cves": 3109,
       "partial_year": true,
-      "through_month": "2026-09"
+      "through_month": "2026-10"
     }
   ]
 }
