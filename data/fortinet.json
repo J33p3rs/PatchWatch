@@ -1,7 +1,7 @@
 {
   "metadata": {
     "vendor": "Fortinet",
-    "generated": "2026-10-04",
+    "generated": "2026-10-18",
     "metric": "Fortinet-assigned CNA CVEs published in each calendar month",
     "metric_label": "Fortinet CNA CVEs",
     "source": "CVEProject/cvelistV5",
@@ -1196,9 +1196,20 @@
     },
     {
       "month": "2026-10",
-      "fortinet_cna_cves": 1,
+      "fortinet_cna_cves": 12,
       "cves": [
-        "CVE-2026-104286"
+        "CVE-2025-46773",
+        "CVE-2025-57739",
+        "CVE-2026-104286",
+        "CVE-2026-106170",
+        "CVE-2026-106171",
+        "CVE-2026-106172",
+        "CVE-2026-106173",
+        "CVE-2026-106175",
+        "CVE-2026-106176",
+        "CVE-2026-23705",
+        "CVE-2026-23706",
+        "CVE-2026-23707"
       ]
     }
   ],
@@ -1225,7 +1236,7 @@
     },
     {
       "year": 2026,
-      "fortinet_cna_cves": 111,
+      "fortinet_cna_cves": 122,
       "partial_year": true,
       "through_month": "2026-10"
     }
