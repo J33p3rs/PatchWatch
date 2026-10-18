@@ -3,9 +3,9 @@
     "source": "CISA Known Exploited Vulnerabilities catalog",
     "source_repository": "https://github.com/cisagov/kev-data",
     "source_branch": "develop",
-    "catalog_version": "2026.10.08",
-    "catalog_date_released": "2026-10-08T20:09:18.9833Z",
-    "generated": "2026-10-11",
+    "catalog_version": "2026.10.16",
+    "catalog_date_released": "2026-10-16T17:15:48.8752Z",
+    "generated": "2026-10-18",
     "metric": "CVEs added to CISA KEV per calendar month, grouped by dateAdded",
     "coverage_start": "2021-11",
     "coverage_end": "2026-10",
@@ -15939,7 +15939,7 @@
     },
     {
       "month": "2026-10",
-      "kev_added_cves": 9,
+      "kev_added_cves": 18,
       "cves": [
         {
           "cve_id": "CVE-2026-104286",
@@ -16021,6 +16021,87 @@
           "date_added": "2026-10-08",
           "due_date": "2026-10-11",
           "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-104935",
+          "vendor_project": "Ivanti",
+          "product": "Connect Secure",
+          "vulnerability_name": "Ivanti Connect Secure Authentication Bypass by Spoofing Vulnerability",
+          "date_added": "2026-10-13",
+          "due_date": "2026-10-16",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-96951",
+          "vendor_project": "Microsoft",
+          "product": "Windows",
+          "vulnerability_name": "Microsoft Windows Command Injection Vulnerability",
+          "date_added": "2026-10-13",
+          "due_date": "2026-10-16",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-0322",
+          "vendor_project": "Palo Alto Networks",
+          "product": "PAN-OS",
+          "vulnerability_name": "Palo Alto Networks PAN-OS Code Injection Vulnerability",
+          "date_added": "2026-10-14",
+          "due_date": "2026-10-17",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-105133",
+          "vendor_project": "Ahsay",
+          "product": "AhsayCBS",
+          "vulnerability_name": "Ahsay AhsayCBS Improper Authentication Vulnerability",
+          "date_added": "2026-10-14",
+          "due_date": "2026-10-17",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-105134",
+          "vendor_project": "Ahsay",
+          "product": "AhsayCBS",
+          "vulnerability_name": "Ahsay AhsayCBS Command Injection Vulnerability",
+          "date_added": "2026-10-14",
+          "due_date": "2026-10-17",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-76519",
+          "vendor_project": "Cisco",
+          "product": "Secure Email Gateway",
+          "vulnerability_name": "Cisco Secure Email Gateway Relative Path Traversal Vulnerability",
+          "date_added": "2026-10-14",
+          "due_date": "2026-10-17",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-21589",
+          "vendor_project": "Atlassian",
+          "product": "Multiple Products",
+          "vulnerability_name": "Atlassian Multiple Products Files or Directories Accessible to External Parties Vulnerability",
+          "date_added": "2026-10-15",
+          "due_date": "2026-10-18",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2025-61624",
+          "vendor_project": "Fortinet",
+          "product": "Multiple Products",
+          "vulnerability_name": "Fortinet Multiple Products Path Traversal Vulnerability",
+          "date_added": "2026-10-16",
+          "due_date": "2026-10-19",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-102764",
+          "vendor_project": "BeyondTrust",
+          "product": "Remote Support",
+          "vulnerability_name": "BeyondTrust Remote Support Authentication Bypass by Spoofing Vulnerability",
+          "date_added": "2026-10-16",
+          "due_date": "2026-10-19",
+          "known_ransomware_campaign_use": "Unknown"
         }
       ]
     }
@@ -16048,7 +16129,7 @@
     },
     {
       "year": 2026,
-      "kev_added_cves": 255,
+      "kev_added_cves": 264,
       "partial_year": true
     }
   ]
