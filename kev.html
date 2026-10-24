@@ -71,12 +71,12 @@
     <section class="chart-card" aria-labelledby="comparison-heading">
       <div class="section-heading trend-heading">
         <div>
-          <p class="eyebrow">Vendor / project vs exploited trend</p>
+          <p class="eyebrow">Series vs exploited trend</p>
           <h2 id="comparison-heading">Is the selected series following the KEV trend?</h2>
         </div>
         <label class="comparison-control" for="comparison-vendor">
           <span>Compare</span>
-          <select id="comparison-vendor" aria-label="Select vendor, platform or project to compare with CISA KEV"></select>
+          <select id="comparison-vendor" aria-label="Select series to compare with CISA KEV"></select>
         </label>
       </div>
       <p class="comparison-explainer">Both series use 12-month rolling averages and are indexed to <strong>100 at the first clean common comparison point</strong>. The comparison starts no earlier than November 2022 so the initial November 2021 KEV catalogue seed is outside the rolling window; series with shorter histories, such as Linux kernel, begin at their first valid 12-month common window.</p>
@@ -103,7 +103,7 @@
       <h2 id="method-heading">What the number means</h2>
       <p>Patch Watch counts entries in CISA's Known Exploited Vulnerabilities catalogue by each record's <code>dateAdded</code>. The source is CISA's official <code>cisagov/kev-data</code> GitHub mirror of the canonical catalogue.</p>
       <p>This measures <strong>when CISA added a CVE to KEV</strong>. It does not mean exploitation began that month, and it is not a vendor patch count or a count of newly published CVEs.</p>
-      <p>The vendor/project comparison uses normalised rolling trends rather than raw totals. It asks whether a tracked disclosure/assignment series is moving faster or slower than the rate at which vulnerabilities are being added to KEV.</p>
+      <p>The comparison uses normalised rolling trends rather than raw totals. Vendor/project series measure their documented disclosure or assignment metrics; NVD measures global CVE publication volume. The chart asks whether the selected series is moving faster or slower than the rate at which vulnerabilities are being added to KEV without treating those metrics as equivalent counts.</p>
     </section>
 
     <div class="retro-only retro-webring" aria-hidden="true">

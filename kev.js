@@ -13,6 +13,7 @@ const COMPARISON_SERIES = {
   chrome: { label: "Chrome", dataUrl: "data/chrome.json", valueKey: "chrome_release_cves" },
   firefox: { label: "Firefox", dataUrl: "data/firefox.json", valueKey: "firefox_security_cves" },
   linux: { label: "Linux kernel", dataUrl: "data/linux-kernel.json", valueKey: "linux_kernel_cna_cves" },
+  nvd: { label: "NVD global", dataUrl: "data/nvd.json", valueKey: "nvd_published_cves" },
 };
 
 const VALID_COMPARISONS = new Set(Object.keys(COMPARISON_SERIES));
