@@ -119,15 +119,15 @@
           "key": "linux",
           "label": "Linux kernel",
           "group": "oss",
-          "value": 2115,
+          "value": 2112,
           "previous_value": 1643,
           "same_month_last_year": 737,
           "trailing_6_month_average": 762.2,
-          "versus_previous_pct": 28.7,
-          "versus_last_year_pct": 187.0,
-          "versus_trailing_average_pct": 177.5,
+          "versus_previous_pct": 28.5,
+          "versus_last_year_pct": 186.6,
+          "versus_trailing_average_pct": 177.1,
           "trend": "elevated",
-          "notability_score": 177.5
+          "notability_score": 177.1
         },
         {
           "key": "nvd",
