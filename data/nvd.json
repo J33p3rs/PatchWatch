@@ -2,7 +2,7 @@
   "metadata": {
     "source": "National Vulnerability Database (NVD) CVE API 2.0",
     "source_url": "https://nvd.nist.gov/developers/vulnerabilities",
-    "generated": "2026-10-18",
+    "generated": "2026-10-25",
     "coverage": "2021-11 through 2026-10",
     "metric": "Non-rejected CVEs published in NVD per calendar month",
     "metric_label": "NVD published CVEs",
@@ -209,7 +209,7 @@
     },
     {
       "month": "2025-12",
-      "nvd_published_cves": 5492
+      "nvd_published_cves": 5491
     },
     {
       "month": "2026-01",
@@ -245,11 +245,11 @@
     },
     {
       "month": "2026-09",
-      "nvd_published_cves": 14936
+      "nvd_published_cves": 14933
     },
     {
       "month": "2026-10",
-      "nvd_published_cves": 9105
+      "nvd_published_cves": 13607
     }
   ],
   "annual": [
@@ -270,12 +270,12 @@
     },
     {
       "year": 2025,
-      "nvd_published_cves": 48152,
+      "nvd_published_cves": 48151,
       "partial_year": false
     },
     {
       "year": 2026,
-      "nvd_published_cves": 81909,
+      "nvd_published_cves": 86408,
       "partial_year": true
     }
   ]

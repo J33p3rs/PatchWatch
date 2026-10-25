@@ -2,7 +2,7 @@
   "metadata": {
     "vendor": "Apple",
     "platform": "iOS",
-    "generated": "2026-10-04",
+    "generated": "2026-10-25",
     "metric": "Unique CVEs documented in Apple security advisories for iOS releases in each calendar month",
     "metric_label": "iOS security CVEs",
     "source": "Apple security releases and linked security advisories",
@@ -2202,7 +2202,7 @@
     },
     {
       "month": "2026-09",
-      "ios_security_cves": 134,
+      "ios_security_cves": 154,
       "apple_release_advisories": 5,
       "cves": [
         "CVE-2026-20683",
@@ -2258,10 +2258,12 @@
         "CVE-2026-65415",
         "CVE-2026-84487",
         "CVE-2026-84489",
+        "CVE-2026-84490",
         "CVE-2026-84491",
         "CVE-2026-84492",
         "CVE-2026-84497",
         "CVE-2026-84507",
+        "CVE-2026-84508",
         "CVE-2026-84510",
         "CVE-2026-84511",
         "CVE-2026-84513",
@@ -2286,6 +2288,7 @@
         "CVE-2026-84566",
         "CVE-2026-84571",
         "CVE-2026-84575",
+        "CVE-2026-84582",
         "CVE-2026-84583",
         "CVE-2026-84593",
         "CVE-2026-84596",
@@ -2299,6 +2302,7 @@
         "CVE-2026-84609",
         "CVE-2026-84611",
         "CVE-2026-84612",
+        "CVE-2026-84613",
         "CVE-2026-84615",
         "CVE-2026-84616",
         "CVE-2026-84617",
@@ -2337,14 +2341,30 @@
         "CVE-2026-86903",
         "CVE-2026-86904",
         "CVE-2026-86905",
+        "CVE-2026-86913",
+        "CVE-2026-86918",
+        "CVE-2026-86919",
+        "CVE-2026-86921",
+        "CVE-2026-86922",
         "CVE-2026-86924",
-        "CVE-2026-86950"
+        "CVE-2026-86944",
+        "CVE-2026-86950",
+        "CVE-2026-86953",
+        "CVE-2026-86955",
+        "CVE-2026-86957",
+        "CVE-2026-86959",
+        "CVE-2026-86961",
+        "CVE-2026-86962",
+        "CVE-2026-86963",
+        "CVE-2026-86975",
+        "CVE-2026-86976",
+        "CVE-2026-86977"
       ]
     },
     {
       "month": "2026-10",
       "ios_security_cves": 0,
-      "apple_release_advisories": 0,
+      "apple_release_advisories": 1,
       "cves": []
     }
   ],
@@ -2371,7 +2391,7 @@
     },
     {
       "year": 2026,
-      "ios_security_cves": 629,
+      "ios_security_cves": 649,
       "partial_year": true,
       "through_month": "2026-10"
     }

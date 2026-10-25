@@ -3,9 +3,9 @@
     "source": "CISA Known Exploited Vulnerabilities catalog",
     "source_repository": "https://github.com/cisagov/kev-data",
     "source_branch": "develop",
-    "catalog_version": "2026.10.16",
-    "catalog_date_released": "2026-10-16T17:15:48.8752Z",
-    "generated": "2026-10-18",
+    "catalog_version": "2026.10.23",
+    "catalog_date_released": "2026-10-23T19:30:18.9209Z",
+    "generated": "2026-10-25",
     "metric": "CVEs added to CISA KEV per calendar month, grouped by dateAdded",
     "coverage_start": "2021-11",
     "coverage_end": "2026-10",
@@ -15939,7 +15939,7 @@
     },
     {
       "month": "2026-10",
-      "kev_added_cves": 18,
+      "kev_added_cves": 26,
       "cves": [
         {
           "cve_id": "CVE-2026-104286",
@@ -16102,6 +16102,78 @@
           "date_added": "2026-10-16",
           "due_date": "2026-10-19",
           "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-106931",
+          "vendor_project": "EG Secure Solutions",
+          "product": "SiteGuard Server Edition",
+          "vulnerability_name": "EG Secure Solutions SiteGuard Server Edition OS Command Injection Vulnerability",
+          "date_added": "2026-10-20",
+          "due_date": "2026-10-23",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-110936",
+          "vendor_project": "Siemens",
+          "product": "Software Center",
+          "vulnerability_name": "Siemens Software Center Uncontrolled Search Path Element Vulnerability",
+          "date_added": "2026-10-20",
+          "due_date": "2026-11-03",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-96652",
+          "vendor_project": "Plex",
+          "product": "Media Server",
+          "vulnerability_name": "Plex Media Server Server-Side Request Forgery (SSRF) Vulnerability",
+          "date_added": "2026-10-20",
+          "due_date": "2026-11-03",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-96654",
+          "vendor_project": "Plex",
+          "product": "Media Server",
+          "vulnerability_name": "Plex Media Server Improper Neutralization of Encoded URI Schemes in a Web Page Vulnerability",
+          "date_added": "2026-10-20",
+          "due_date": "2026-10-23",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-96655",
+          "vendor_project": "Plex",
+          "product": "Media Server",
+          "vulnerability_name": "Plex Media Server Server-Side Request Forgery (SSRF) Vulnerability",
+          "date_added": "2026-10-20",
+          "due_date": "2026-11-03",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-96656",
+          "vendor_project": "Plex",
+          "product": "Media Server",
+          "vulnerability_name": "Plex Media Server External Control of File Name or Path Vulnerability",
+          "date_added": "2026-10-20",
+          "due_date": "2026-10-23",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-110447",
+          "vendor_project": "Collabora",
+          "product": "Collabora Online – Built-in CODE Server",
+          "vulnerability_name": "Collabora Online – Built-in CODE Server OS Command Injection Vulnerability",
+          "date_added": "2026-10-23",
+          "due_date": "2026-10-26",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-114625",
+          "vendor_project": "Arista",
+          "product": "VeloCloud Orchestrator",
+          "vulnerability_name": "Arista VeloCloud Orchestrator SQL Injection Vulnerability",
+          "date_added": "2026-10-23",
+          "due_date": "2026-10-26",
+          "known_ransomware_campaign_use": "Unknown"
         }
       ]
     }
@@ -16129,7 +16201,7 @@
     },
     {
       "year": 2026,
-      "kev_added_cves": 264,
+      "kev_added_cves": 272,
       "partial_year": true
     }
   ]

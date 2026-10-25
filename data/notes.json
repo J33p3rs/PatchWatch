@@ -7,13 +7,13 @@
       "year": 2026,
       "title": "September 2026: patching pressure remains elevated",
       "summary": "The broader pattern stayed elevated, with 8 tracked measures above their recent baselines.",
-      "combined_value": 1934,
+      "combined_value": 1974,
       "combined_trend": "elevated",
       "observations": [
         "Chrome: 466, broadly within its recent range (+14.8% versus the preceding six-month average); +18.0% month on month; +1356.2% versus the same month last year.",
         "Firefox: 185, well above its recent baseline (+255.8% versus the preceding six-month average); +219.0% month on month; +1323.1% versus the same month last year.",
         "Microsoft: 972, well above its recent baseline (+275.7% versus the preceding six-month average); +144.2% month on month; +1100.0% versus the same month last year.",
-        "All included vendors: 1,934, well above its recent baseline (+119.9% versus the preceding six-month average); +86.5% month on month; +613.7% versus the same month last year."
+        "macOS: 186, well above its recent baseline (+144.7% versus the preceding six-month average); +431.4% month on month; +80.6% versus the same month last year."
       ],
       "watch": "Whether Chrome and Firefox revert toward their six-month baselines or establish a new normal over the next few months.",
       "metrics": [
@@ -21,15 +21,15 @@
           "key": "all",
           "label": "All included vendors",
           "group": "combined",
-          "value": 1934,
+          "value": 1974,
           "previous_value": 1037,
           "same_month_last_year": 271,
           "trailing_6_month_average": 879.3,
-          "versus_previous_pct": 86.5,
-          "versus_last_year_pct": 613.7,
-          "versus_trailing_average_pct": 119.9,
+          "versus_previous_pct": 90.4,
+          "versus_last_year_pct": 628.4,
+          "versus_trailing_average_pct": 124.5,
           "trend": "elevated",
-          "notability_score": 245.5
+          "notability_score": 251.4
         },
         {
           "key": "microsoft",
@@ -63,29 +63,29 @@
           "key": "ios",
           "label": "iOS",
           "group": "vendor",
-          "value": 134,
+          "value": 154,
           "previous_value": 144,
           "same_month_last_year": 40,
           "trailing_6_month_average": 72.8,
-          "versus_previous_pct": -6.9,
-          "versus_last_year_pct": 235.0,
-          "versus_trailing_average_pct": 84.1,
+          "versus_previous_pct": 6.9,
+          "versus_last_year_pct": 285.0,
+          "versus_trailing_average_pct": 111.5,
           "trend": "elevated",
-          "notability_score": 94.0
+          "notability_score": 114.0
         },
         {
           "key": "macos",
           "label": "macOS",
           "group": "vendor",
-          "value": 166,
+          "value": 186,
           "previous_value": 35,
           "same_month_last_year": 103,
           "trailing_6_month_average": 76,
-          "versus_previous_pct": 374.3,
-          "versus_last_year_pct": 61.2,
-          "versus_trailing_average_pct": 118.4,
+          "versus_previous_pct": 431.4,
+          "versus_last_year_pct": 80.6,
+          "versus_trailing_average_pct": 144.7,
           "trend": "elevated",
-          "notability_score": 224.6
+          "notability_score": 258.8
         },
         {
           "key": "chrome",
@@ -133,15 +133,15 @@
           "key": "nvd",
           "label": "NVD",
           "group": "global",
-          "value": 14936,
+          "value": 14933,
           "previous_value": 12258,
           "same_month_last_year": 4321,
           "trailing_6_month_average": 8158.3,
           "versus_previous_pct": 21.8,
-          "versus_last_year_pct": 245.7,
-          "versus_trailing_average_pct": 83.1,
+          "versus_last_year_pct": 245.6,
+          "versus_trailing_average_pct": 83.0,
           "trend": "elevated",
-          "notability_score": 98.3
+          "notability_score": 98.2
         },
         {
           "key": "kev",
@@ -607,7 +607,7 @@
           "value": 7942,
           "previous_value": 6936,
           "same_month_last_year": 3681,
-          "trailing_6_month_average": 5565,
+          "trailing_6_month_average": 5564.8,
           "versus_previous_pct": 14.5,
           "versus_last_year_pct": 115.8,
           "versus_trailing_average_pct": 42.7,
