@@ -1,41 +1,15 @@
 {
   "metadata": {
     "vendor": "Fortinet",
-    "generated": "2026-10-18",
+    "generated": "2026-11-01",
     "metric": "Fortinet-assigned CNA CVEs published in each calendar month",
     "metric_label": "Fortinet CNA CVEs",
     "source": "CVEProject/cvelistV5",
     "source_url": "https://github.com/CVEProject/cvelistV5",
-    "coverage": "2021-11 through 2026-10",
+    "coverage": "2021-12 through 2026-11",
     "methodology_note": "Calendar-month disclosure volume includes both regular monthly PSIRT disclosures and out-of-cycle Fortinet CNA publications. It is not presented as a direct equivalent of Microsoft Patch Tuesday release counts."
   },
   "monthly": [
-    {
-      "month": "2021-11",
-      "fortinet_cna_cves": 20,
-      "cves": [
-        "CVE-2020-12814",
-        "CVE-2020-15935",
-        "CVE-2020-15940",
-        "CVE-2021-26107",
-        "CVE-2021-32595",
-        "CVE-2021-32600",
-        "CVE-2021-36172",
-        "CVE-2021-36174",
-        "CVE-2021-36176",
-        "CVE-2021-36181",
-        "CVE-2021-36183",
-        "CVE-2021-36184",
-        "CVE-2021-36185",
-        "CVE-2021-36186",
-        "CVE-2021-36187",
-        "CVE-2021-36192",
-        "CVE-2021-41019",
-        "CVE-2021-41022",
-        "CVE-2021-41023",
-        "CVE-2021-42754"
-      ]
-    },
     {
       "month": "2021-12",
       "fortinet_cna_cves": 39,
@@ -1196,7 +1170,7 @@
     },
     {
       "month": "2026-10",
-      "fortinet_cna_cves": 12,
+      "fortinet_cna_cves": 14,
       "cves": [
         "CVE-2025-46773",
         "CVE-2025-57739",
@@ -1205,12 +1179,19 @@
         "CVE-2026-106171",
         "CVE-2026-106172",
         "CVE-2026-106173",
+        "CVE-2026-106174",
         "CVE-2026-106175",
         "CVE-2026-106176",
+        "CVE-2026-107656",
         "CVE-2026-23705",
         "CVE-2026-23706",
         "CVE-2026-23707"
       ]
+    },
+    {
+      "month": "2026-11",
+      "fortinet_cna_cves": 0,
+      "cves": []
     }
   ],
   "annual": [
@@ -1236,9 +1217,9 @@
     },
     {
       "year": 2026,
-      "fortinet_cna_cves": 122,
+      "fortinet_cna_cves": 124,
       "partial_year": true,
-      "through_month": "2026-10"
+      "through_month": "2026-11"
     }
   ]
 }

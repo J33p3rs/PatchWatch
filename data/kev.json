@@ -3,12 +3,12 @@
     "source": "CISA Known Exploited Vulnerabilities catalog",
     "source_repository": "https://github.com/cisagov/kev-data",
     "source_branch": "develop",
-    "catalog_version": "2026.10.23",
-    "catalog_date_released": "2026-10-23T19:30:18.9209Z",
-    "generated": "2026-10-25",
+    "catalog_version": "2026.10.30",
+    "catalog_date_released": "2026-10-30T17:02:45.3665Z",
+    "generated": "2026-11-01",
     "metric": "CVEs added to CISA KEV per calendar month, grouped by dateAdded",
     "coverage_start": "2021-11",
-    "coverage_end": "2026-10",
+    "coverage_end": "2026-11",
     "view_group": "global",
     "include_in_all": false
   },
@@ -15939,7 +15939,7 @@
     },
     {
       "month": "2026-10",
-      "kev_added_cves": 26,
+      "kev_added_cves": 36,
       "cves": [
         {
           "cve_id": "CVE-2026-104286",
@@ -16174,8 +16174,103 @@
           "date_added": "2026-10-23",
           "due_date": "2026-10-26",
           "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-109618",
+          "vendor_project": "PHP Group",
+          "product": "PHP",
+          "vulnerability_name": "PHP Memory Corruption Vulnerability",
+          "date_added": "2026-10-26",
+          "due_date": "2026-10-29",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-109619",
+          "vendor_project": "PHP Group",
+          "product": "PHP",
+          "vulnerability_name": "PHP Stale Internal Request-State Vulnerability",
+          "date_added": "2026-10-26",
+          "due_date": "2026-10-29",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-111497",
+          "vendor_project": "Google",
+          "product": "Brotli",
+          "vulnerability_name": "Google Brotli Unchecked Return Value Vulnerability",
+          "date_added": "2026-10-27",
+          "due_date": "2026-11-10",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-48356",
+          "vendor_project": "Adobe",
+          "product": "Commerce and Magento",
+          "vulnerability_name": "Adobe Commerce and Magento Unrestricted Upload of File with Dangerous Type Vulnerability",
+          "date_added": "2026-10-27",
+          "due_date": "2026-11-10",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-41709",
+          "vendor_project": "Broadcom",
+          "product": "VMware ESX",
+          "vulnerability_name": "Broadcom VMWare ESX Insufficient Logging Vulnerability",
+          "date_added": "2026-10-28",
+          "due_date": "2026-11-11",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-46300",
+          "vendor_project": "Linux",
+          "product": "Kernel",
+          "vulnerability_name": "Linux Kernel Missing Initialization of a Variable Vulnerability",
+          "date_added": "2026-10-28",
+          "due_date": "2026-10-31",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-76418",
+          "vendor_project": "Cisco",
+          "product": "Secure Firewall ASA Software and Cisco Secure FTD Software",
+          "vulnerability_name": "Cisco Secure Firewall ASA Software and Cisco Secure FTD Software Unchecked Return Value to NULL Pointer Dereference Vulnerability",
+          "date_added": "2026-10-29",
+          "due_date": "2026-11-01",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-97229",
+          "vendor_project": "GitLab",
+          "product": "Community Edition and Enterprise Edition",
+          "vulnerability_name": "GitLab Community Edition and Enterprise Edition Integer Overflow or Wraparound Vulnerability",
+          "date_added": "2026-10-29",
+          "due_date": "2026-11-01",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-111357",
+          "vendor_project": "Ivanti",
+          "product": "Connect Secure",
+          "vulnerability_name": "Ivanti Connect Secure Missing Authentication for Critical Function Vulnerability",
+          "date_added": "2026-10-30",
+          "due_date": "2026-11-02",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-118527",
+          "vendor_project": "Ivanti",
+          "product": "Connect Secure",
+          "vulnerability_name": "Ivanti Connect Secure Generation of Predictable Numbers or Identifiers Vulnerability",
+          "date_added": "2026-10-30",
+          "due_date": "2026-11-13",
+          "known_ransomware_campaign_use": "Unknown"
         }
       ]
+    },
+    {
+      "month": "2026-11",
+      "kev_added_cves": 0,
+      "cves": []
     }
   ],
   "annual": [
@@ -16201,7 +16296,7 @@
     },
     {
       "year": 2026,
-      "kev_added_cves": 272,
+      "kev_added_cves": 282,
       "partial_year": true
     }
   ]
