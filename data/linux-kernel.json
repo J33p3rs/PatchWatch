@@ -5,8 +5,8 @@
     "source": "https://git.kernel.org/pub/scm/linux/security/vulns.git/",
     "source_tree": "cve/published",
     "chronology": "first appearance of the current published path in vulns.git using Git committer date",
-    "generated": "2026-11-01",
-    "generated_at": "2026-11-01T06:45:25Z",
+    "generated": "2026-11-08",
+    "generated_at": "2026-11-08T06:37:29Z",
     "coverage_start": "2024-02",
     "coverage_end": "2026-10",
     "include_in_all": false,
@@ -15208,7 +15208,7 @@
     },
     {
       "month": "2026-09",
-      "linux_kernel_cna_cves": 2112,
+      "linux_kernel_cna_cves": 2108,
       "cves": [
         "CVE-2026-100070",
         "CVE-2026-100071",
@@ -15305,7 +15305,6 @@
         "CVE-2026-80808",
         "CVE-2026-80809",
         "CVE-2026-80810",
-        "CVE-2026-80811",
         "CVE-2026-80812",
         "CVE-2026-80813",
         "CVE-2026-80814",
@@ -15503,8 +15502,6 @@
         "CVE-2026-81006",
         "CVE-2026-81007",
         "CVE-2026-81008",
-        "CVE-2026-81009",
-        "CVE-2026-81010",
         "CVE-2026-81011",
         "CVE-2026-81012",
         "CVE-2026-81013",
@@ -17054,7 +17051,6 @@
         "CVE-2026-97615",
         "CVE-2026-97616",
         "CVE-2026-97617",
-        "CVE-2026-97618",
         "CVE-2026-97619",
         "CVE-2026-97620",
         "CVE-2026-97621",
@@ -18389,7 +18385,7 @@
     },
     {
       "year": 2026,
-      "linux_kernel_cna_cves": 8202,
+      "linux_kernel_cna_cves": 8198,
       "partial_year": true
     }
   ]
