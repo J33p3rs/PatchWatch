@@ -7,12 +7,12 @@
       "year": 2026,
       "title": "October 2026: patching pressure remains elevated",
       "summary": "The broader pattern stayed elevated, with 7 tracked measures above their recent baselines.",
-      "combined_value": 2811,
+      "combined_value": 2813,
       "combined_trend": "elevated",
       "observations": [
-        "Chrome: 731, well above its recent baseline (+56.3% versus the preceding six-month average); +56.9% month on month; +2510.7% versus the same month last year.",
+        "Chrome: 733, well above its recent baseline (+56.7% versus the preceding six-month average); +57.3% month on month; +2517.9% versus the same month last year.",
         "Firefox: 252, well above its recent baseline (+237.3% versus the preceding six-month average); +36.2% month on month; +1580.0% versus the same month last year.",
-        "All included vendors: 2,811, well above its recent baseline (+144.9% versus the preceding six-month average); +40.3% month on month; +1038.1% versus the same month last year.",
+        "All included vendors: 2,813, well above its recent baseline (+145.1% versus the preceding six-month average); +40.4% month on month; +1038.9% versus the same month last year.",
         "Microsoft: 1,415, well above its recent baseline (+247.9% versus the preceding six-month average); +45.6% month on month; +722.7% versus the same month last year."
       ],
       "watch": "Whether Chrome and Firefox revert toward their six-month baselines or establish a new normal over the next few months.",
@@ -21,15 +21,15 @@
           "key": "all",
           "label": "All included vendors",
           "group": "combined",
-          "value": 2811,
+          "value": 2813,
           "previous_value": 2003,
           "same_month_last_year": 247,
           "trailing_6_month_average": 1147.7,
-          "versus_previous_pct": 40.3,
-          "versus_last_year_pct": 1038.1,
-          "versus_trailing_average_pct": 144.9,
+          "versus_previous_pct": 40.4,
+          "versus_last_year_pct": 1038.9,
+          "versus_trailing_average_pct": 145.1,
           "trend": "elevated",
-          "notability_score": 415.2
+          "notability_score": 415.6
         },
         {
           "key": "microsoft",
@@ -91,15 +91,15 @@
           "key": "chrome",
           "label": "Chrome",
           "group": "vendor",
-          "value": 731,
+          "value": 733,
           "previous_value": 466,
           "same_month_last_year": 28,
           "trailing_6_month_average": 467.8,
-          "versus_previous_pct": 56.9,
-          "versus_last_year_pct": 2510.7,
-          "versus_trailing_average_pct": 56.3,
+          "versus_previous_pct": 57.3,
+          "versus_last_year_pct": 2517.9,
+          "versus_trailing_average_pct": 56.7,
           "trend": "elevated",
-          "notability_score": 1004.3
+          "notability_score": 1007.2
         },
         {
           "key": "firefox",

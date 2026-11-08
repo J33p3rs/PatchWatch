@@ -3,9 +3,9 @@
     "source": "CISA Known Exploited Vulnerabilities catalog",
     "source_repository": "https://github.com/cisagov/kev-data",
     "source_branch": "develop",
-    "catalog_version": "2026.10.30",
-    "catalog_date_released": "2026-10-30T17:02:45.3665Z",
-    "generated": "2026-11-01",
+    "catalog_version": "2026.11.06",
+    "catalog_date_released": "2026-11-06T19:44:45.1797Z",
+    "generated": "2026-11-08",
     "metric": "CVEs added to CISA KEV per calendar month, grouped by dateAdded",
     "coverage_start": "2021-11",
     "coverage_end": "2026-11",
@@ -16269,8 +16269,36 @@
     },
     {
       "month": "2026-11",
-      "kev_added_cves": 0,
-      "cves": []
+      "kev_added_cves": 3,
+      "cves": [
+        {
+          "cve_id": "CVE-2026-119977",
+          "vendor_project": "WordPress",
+          "product": "WordPress Core",
+          "vulnerability_name": "WordPress WordPress Core Time-of-check Time-of-use (TOCTOU) Race Condition Vulnerability",
+          "date_added": "2026-11-03",
+          "due_date": "2026-11-06",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2024-27834",
+          "vendor_project": "Apple",
+          "product": "Multiple Products",
+          "vulnerability_name": "Apple Multiple Products Improper Authentication Vulnerability",
+          "date_added": "2026-11-04",
+          "due_date": "2026-11-18",
+          "known_ransomware_campaign_use": "Unknown"
+        },
+        {
+          "cve_id": "CVE-2026-19868",
+          "vendor_project": "SonicWall",
+          "product": "SonicOS SSLVPN",
+          "vulnerability_name": "SonicWall SonicOS SSLVPN Use of Single-factor Authentication Vulnerability",
+          "date_added": "2026-11-06",
+          "due_date": "2026-11-20",
+          "known_ransomware_campaign_use": "Unknown"
+        }
+      ]
     }
   ],
   "annual": [
@@ -16296,7 +16324,7 @@
     },
     {
       "year": 2026,
-      "kev_added_cves": 282,
+      "kev_added_cves": 285,
       "partial_year": true
     }
   ]

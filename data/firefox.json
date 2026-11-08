@@ -2,7 +2,7 @@
   "metadata": {
     "vendor": "Mozilla",
     "product": "Firefox desktop and Firefox ESR",
-    "generated": "2026-11-01",
+    "generated": "2026-11-08",
     "metric": "Unique CVEs documented in Mozilla Firefox desktop and Firefox ESR security advisories announced in each calendar month",
     "metric_label": "Firefox security CVEs",
     "source": "Mozilla Foundation Security Advisories",
@@ -2216,9 +2216,13 @@
     },
     {
       "month": "2026-11",
-      "firefox_security_cves": 0,
-      "cves": [],
-      "advisories": []
+      "firefox_security_cves": 1,
+      "cves": [
+        "CVE-2026-120572"
+      ],
+      "advisories": [
+        "MFSA2026-123"
+      ]
     }
   ],
   "annual": [
@@ -2244,7 +2248,7 @@
     },
     {
       "year": 2026,
-      "firefox_security_cves": 820,
+      "firefox_security_cves": 821,
       "partial_year": true,
       "through_month": "2026-11"
     }
