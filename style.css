@@ -474,3 +474,115 @@ footer p { margin-bottom: 0; }
   .retro-webring { flex-direction: column; }
   .retro-footer-copy { align-items: flex-start; text-align: left; }
 }
+
+
+/* Christmas 8-bit — seasonal theme exposed by themes.js from 1 Nov to 31 Dec. */
+:root[data-theme="christmas8bit"] {
+  color-scheme: dark;
+  --page-top: #071b13;
+  --page-bottom: #0d281b;
+  --text: #fff7dc;
+  --heading: #ffffff;
+  --muted: #d9ead3;
+  --subtle: #b7d7b0;
+  --eyebrow: #ffd45a;
+  --card-bg: #123a27;
+  --card-border: #f3f0d7;
+  --card-shadow: rgba(0, 0, 0, 0.35);
+  --accent: #e63946;
+  --accent-strong: #ff5964;
+  --accent-number: #ffd45a;
+  --partial: #6fae8b;
+  --grid: #285d42;
+  --axis: #d9ead3;
+  --value: #fff7dc;
+  --footer: #cfe5c8;
+  --toggle-bg: #0a2418;
+  --toggle-border: #f3f0d7;
+  --selector-bg: #0a2418;
+  --selector-active: #e63946;
+  --selector-active-text: #ffffff;
+  --error-bg: #3b1519;
+  --error-text: #ffd9dc;
+  background: var(--page-bottom);
+}
+
+:root[data-theme="christmas8bit"] body {
+  background:
+    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px) 0 0 / 8px 8px,
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px) 0 0 / 8px 8px,
+    linear-gradient(180deg, var(--page-top), var(--page-bottom));
+  image-rendering: pixelated;
+}
+
+:root[data-theme="christmas8bit"] .hero,
+:root[data-theme="christmas8bit"] .card,
+:root[data-theme="christmas8bit"] .site-nav,
+:root[data-theme="christmas8bit"] select,
+:root[data-theme="christmas8bit"] button {
+  border-radius: 0;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, .35);
+}
+
+:root[data-theme="christmas8bit"] .card,
+:root[data-theme="christmas8bit"] .hero {
+  border-width: 2px;
+}
+
+:root[data-theme="christmas8bit"] .hero::before {
+  content: "✦  ❄  ★  PATCH WATCH CHRISTMAS  ★  ❄  ✦";
+  display: block;
+  margin-bottom: .8rem;
+  color: #ffd45a;
+  font-family: "Courier New", monospace;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-shadow: 2px 2px 0 #7d111a;
+}
+
+:root[data-theme="christmas8bit"] .hero::after {
+  content: "▲  ▲  ▲    ■■■    ▲  ▲  ▲";
+  display: block;
+  margin-top: 1rem;
+  color: #5fd17d;
+  font-family: "Courier New", monospace;
+  font-weight: 900;
+  letter-spacing: .22em;
+  text-shadow: 2px 2px 0 #123a27;
+}
+
+:root[data-theme="christmas8bit"] h1,
+:root[data-theme="christmas8bit"] h2,
+:root[data-theme="christmas8bit"] .eyebrow,
+:root[data-theme="christmas8bit"] .site-nav,
+:root[data-theme="christmas8bit"] select {
+  font-family: "Courier New", monospace;
+}
+
+:root[data-theme="christmas8bit"] .bar {
+  fill: #e63946;
+  shape-rendering: crispEdges;
+}
+
+:root[data-theme="christmas8bit"] .bar:nth-of-type(even) {
+  fill: #5fd17d;
+}
+
+:root[data-theme="christmas8bit"] .trend-line {
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+:root[data-theme="christmas8bit"] .grid-line {
+  shape-rendering: crispEdges;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-theme="christmas8bit"] .hero::before {
+    animation: christmas-pixel-twinkle 2s steps(2, end) infinite;
+  }
+}
+
+@keyframes christmas-pixel-twinkle {
+  50% { opacity: .72; }
+}

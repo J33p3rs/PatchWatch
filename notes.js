@@ -2,12 +2,17 @@ const NOTES_DATA_URL = "data/notes.json";
 const VALID_MONTH = /^\d{4}-\d{2}$/;
 const SMALL_YOY_BASELINE = 10;
 const THEME_STORAGE_KEY = "patchwatch-theme";
-const VALID_THEMES = new Set(["light", "dark", "patchwatch90"]);
+function validThemes() {
+  if (typeof window !== "undefined" && window.PatchWatchThemes) {
+    return new Set(window.PatchWatchThemes.availableThemes().map((theme) => theme.key));
+  }
+  return new Set(["light", "dark", "patchwatch90"]);
+}
 
 function readUrlTheme() {
   try {
     const theme = new URL(window.location.href).searchParams.get("theme");
-    return VALID_THEMES.has(theme) ? theme : null;
+    return validThemes().has(theme) ? theme : null;
   } catch (error) {
     return null;
   }
@@ -16,7 +21,7 @@ function readUrlTheme() {
 function readStoredTheme() {
   try {
     const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-    return VALID_THEMES.has(stored) ? stored : null;
+    return validThemes().has(stored) ? stored : null;
   } catch (error) {
     console.warn("Patch Watch could not read the saved theme preference", error);
     return null;
@@ -51,7 +56,7 @@ function updateThemeUrl(theme) {
 }
 
 function applyTheme(theme, persist = false) {
-  const resolved = VALID_THEMES.has(theme) ? theme : "light";
+  const resolved = validThemes().has(theme) ? theme : "light";
   document.documentElement.dataset.theme = resolved;
   document.documentElement.style.colorScheme = resolved === "light" ? "light" : "dark";
   const selector = document.querySelector("#theme-select");
@@ -61,6 +66,7 @@ function applyTheme(theme, persist = false) {
 
 function initialiseTheme() {
   const selector = document.querySelector("#theme-select");
+  window.PatchWatchThemes.populateSelector(selector);
   if (selector) {
     selector.addEventListener("change", () => {
       applyTheme(selector.value, true);

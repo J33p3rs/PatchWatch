@@ -1,5 +1,5 @@
 const THEME_STORAGE_KEY = "patchwatch-theme";
-const VALID_THEMES = new Set(["light", "dark", "patchwatch90"]);
+const VALID_THEMES = new Set(window.PatchWatchThemes.availableThemes().map((theme) => theme.key));
 const VALUE_KEY = "nvd_published_cves";
 const DEFAULT_COMPARISON = "microsoft";
 const ROLLING_WINDOW = 12;
@@ -106,6 +106,7 @@ function applyTheme(theme, persist = false) {
 
 function initialiseTheme() {
   const selector = document.querySelector("#theme-select");
+  window.PatchWatchThemes.populateSelector(selector);
   if (selector) {
     selector.addEventListener("change", () => {
       applyTheme(selector.value, true);
