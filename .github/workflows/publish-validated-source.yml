@@ -317,7 +317,7 @@ jobs:
           mkdir -p publish/data
           for path in \
             index.html nvd.html kev.html notes.html \
-            app.js nvd.js kev.js notes.js chart-scroll.js bar-selection.js \
+            app.js nvd.js kev.js notes.js themes.js chart-scroll.js bar-selection.js \
             style.css trend.css bar-selection.css notes.css \
             data/patches.json data/fortinet.json data/ios.json data/macos.json \
             data/chrome.json data/firefox.json data/nvd.json data/kev.json data/linux-kernel.json data/notes.json; do
@@ -353,6 +353,7 @@ jobs:
           notes.css
           notes.html
           notes.js
+          themes.js
           nvd.html
           nvd.js
           style.css
